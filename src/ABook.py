@@ -138,11 +138,13 @@ class CourseTreeWidget(QtWidgets.QWidget, ABook):
         self.ListView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ListView.doubleClicked.connect(self.open_resource)
 
-
+        # os.path.abspath(self.settings["download_path"])
+        print(QDir.currentPath())
         tree_view = QTreeView()
         filesystem_model = QFileSystemModel(tree_view)
-        filesystem_model.setRootPath(QDir.currentPath())
+        filesystem_model.setRootPath(os.path.abspath(self.settings["download_path"]))
         tree_view.setModel(filesystem_model)
+        tree_view.setRootIndex(filesystem_model.index(os.path.abspath(self.settings["download_path"])))
 
         self.fileDownloadWidget = FileDownloaderWidget()
         main_layout = QtWidgets.QGridLayout()
