@@ -54,8 +54,8 @@ class FileDownloaderWidget(QWidget):
     def addDownloadItem(self, file_name: str, file_path: str, url: str) -> int:
         row = self.tableWidget.rowCount()
         self.tableWidget.setRowCount(self.tableWidget.rowCount() + 1)
-        fileNameIten = QTableWidgetItem(file_name)
-        fileNameIten.setFlags(Qt.ItemIsEnabled)
+        fileNameItem = QTableWidgetItem(file_name)
+        fileNameItem.setFlags(Qt.ItemIsEnabled)
         progressBarItem = QTableWidgetItem("")
         progressBarItem.setFlags(Qt.ItemIsEnabled)
         downloadSpeedItem = QTableWidgetItem("0 MB/S")
@@ -73,7 +73,7 @@ class FileDownloaderWidget(QWidget):
         progressBar.setAlignment(Qt.AlignCenter)
         progressBar.setFormat(str(progressBar.value()) + " %")
 
-        self.tableWidget.setItem(row, 0, fileNameIten)
+        self.tableWidget.setItem(row, 0, fileNameItem)
         self.tableWidget.setItem(row, 1, progressBarItem)
         self.tableWidget.setCellWidget(row, 1, progressBar)
         self.tableWidget.setItem(row, 2, downloadSpeedItem)
