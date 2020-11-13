@@ -10,23 +10,26 @@ class DownloadSignals(QObject):
     progress_value = Signal(list)
     download_status = Signal(list)
     download_next = Signal(None)
-    cancel_download = Signal(None)
+    cancel_download = Signal(int)
 
 class FileDownloaderWidget(QWidget): 
     def __init__(self): 
         super().__init__() 
-
         self.signals = DownloadSignals()
         self.task_list = []
         self.tableWidget = QTableWidget() 
+        self.initLayout()
         
+        
+    def initLayout(self) -> None:
         self.startDownloadButton = QPushButton("Start Download")
-        self.startDownloadButton.clicked.connect(self.start_download)
+        self.startDownloadButton.clicked.connect(self.startDownload)
         self.clearDownloadListButton = QPushButton("Clear List")
-        self.clearDownloadListButton.clicked.connect(self.clear_download_list)
+        self.clearDownloadListButton.clicked.connect(self.clearDownloadList)
         self.hideFinishedCheckBox = QCheckBox("Hide Finished")
-        self.hideFinishedCheckBox.toggled.connect(self.hide_finished)
-        self.createTable() 
+        self.hideFinishedCheckBox.toggled.connect(self.hideFinished)
+        self.signals.cancel_download.connect(self.cancelDownload)
+        self.createTable()
 
         self.layout = QVBoxLayout() 
         self.layout.setMargin(0)
@@ -35,11 +38,11 @@ class FileDownloaderWidget(QWidget):
         self.layout.addWidget(self.startDownloadButton)
         self.layout.addWidget(self.clearDownloadListButton)
         self.setLayout(self.layout) 
-      
+
+
     def createTable(self): 
-  
         # File name | Progress Bar | Speed | Status | Url | File Path
-        self.tableWidget.setColumnCount(6) 
+        self.tableWidget.setColumnCount(7) 
         self.tableWidget.setRowCount(0)
         self.tableWidget.setHorizontalHeaderItem(0, QTableWidgetItem("File Name"))
         self.tableWidget.setHorizontalHeaderItem(1, QTableWidgetItem("Progress Bar"))
@@ -47,6 +50,7 @@ class FileDownloaderWidget(QWidget):
         self.tableWidget.setHorizontalHeaderItem(3, QTableWidgetItem("Status"))
         self.tableWidget.setHorizontalHeaderItem(4, QTableWidgetItem("Url"))
         self.tableWidget.setHorizontalHeaderItem(5, QTableWidgetItem("File Path"))
+        self.tableWidget.setHorizontalHeaderItem(6, QTableWidgetItem("Operation"))
         #Table will fit the screen horizontally 
         self.tableWidget.horizontalHeader().setStretchLastSection(True) 
         # self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
@@ -66,12 +70,19 @@ class FileDownloaderWidget(QWidget):
         downloadUrlItem.setFlags(Qt.ItemIsEnabled)
         filePathItem = QTableWidgetItem(file_path)
         filePathItem.setFlags(Qt.ItemIsEnabled)
+        operationItem = QTableWidgetItem("")
+        operationItem.setFlags(Qt.ItemIsEnabled)
         progressBar = QProgressBar()
         progressBar.setMinimum(0)
         progressBar.setMaximum(100)
         progressBar.setValue(0)
         progressBar.setAlignment(Qt.AlignCenter)
         progressBar.setFormat(str(progressBar.value()) + " %")
+
+        def emitCancelDownloadSignal(row):
+            self.signals.cancel_download.emit(row)
+        cancelDownloadButton = QPushButton("Cancel")
+        cancelDownloadButton.clicked.connect(emitCancelDownloadSignal)
 
         self.tableWidget.setItem(row, 0, fileNameItem)
         self.tableWidget.setItem(row, 1, progressBarItem)
@@ -80,32 +91,40 @@ class FileDownloaderWidget(QWidget):
         self.tableWidget.setItem(row, 3, downloadStatusItem)
         self.tableWidget.setItem(row, 4, downloadUrlItem)
         self.tableWidget.setItem(row, 5, filePathItem)
+        self.tableWidget.setItem(row, 6, operationItem)
+        self.tableWidget.setCellWidget(row, 6, cancelDownloadButton)
         return row
 
     def addDownloadTask(self, file_name: str, file_path: str, url: str) -> None:
         row = self.addDownloadItem(file_name, file_path, url)
         self.task_list.append([row, file_name, file_path, url])
 
-    def start_download(self):
+    def startDownload(self):
         if len(self.task_list) > 0:
             task = self.task_list[0]
             self.task_list.pop(0)
             worker = DownloadWorker(self, task)
             worker.start()
     
-    def clear_download_list(self):
+    def clearDownloadList(self):
         self.createTable()
         self.task_list.clear()
-        self.signals.cancel_download.emit()
+        self.signals.cancel_download.emit(-1)
 
-    def hide_finished(self):
+    def hideFinished(self):
         if self.hideFinishedCheckBox.isChecked():
             for row in range(0, self.tableWidget.rowCount()):
-                if self.tableWidget.item(row, 3).text() == "Done":
+                if self.tableWidget.item(row, 3).text() == "Done" or self.tableWidget.item(row, 3).text() == "Cancelled":
                     self.tableWidget.hideRow(row)
         else:
             for row in range(0, self.tableWidget.rowCount()):
                 self.tableWidget.showRow(row)
+
+    def cancelDownload(self, row):
+        self.tableWidget.item(row, 3).setText("Cancelled")
+        for task in self.task_list:
+            if task[0] == row:
+                self.task_list.remove(task)
 
     @Slot(list)
     def update_progress_bar(self, message):
@@ -136,9 +155,14 @@ class DownloadWorker(QThread):
         self.signals.progress_value.connect(parent.update_progress_bar)
         self.signals.download_speed.connect(parent.update_download_speed)
         self.signals.download_status.connect(parent.update_download_status)
-        self.signals.download_next.connect(parent.start_download)
-        self.signals.download_next.connect(parent.hide_finished)
-        parent.signals.cancel_download.connect(self.terminate)
+        self.signals.download_next.connect(parent.startDownload)
+        self.signals.download_next.connect(parent.hideFinished)
+        parent.signals.cancel_download.connect(self.cancelDownload)
+    
+    def cancelDownload(self, row):
+        if row == -1 or row == self.row:
+            print(row)
+            self.terminate()
 
     def run(self):
         self.signals.download_status.emit([self.row, "Downloading"])
