@@ -1,6 +1,6 @@
 import json
-from PySide2.QtCore import QThread, Qt, Signal
-from PySide2.QtWidgets import QApplication, QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
+from PySide2.QtCore import QThread, Qt, Signal, Slot
+from PySide2.QtWidgets import QApplication, QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget
 import requests
 import sys
 
@@ -111,7 +111,7 @@ class UserLoginDialog(QDialog, ABookLogin):
         QDialog.__init__(self)
         ABookLogin.__init__(self)
         self.initLayout()
-        self.show()
+        self.exec_()
     
     def initLayout(self):
         self.login_widget =  LoginWidget(self)
@@ -127,9 +127,11 @@ class UserLoginDialog(QDialog, ABookLogin):
         worker = LoginWorker(self)
         worker.start()
 
+    @Slot(str)
     def handleLoginStatus(self, status):
         print(status)
 
+    @Slot(bool)
     def handleLoginResponse(self, response):
         print(response)
         if response:
@@ -143,4 +145,3 @@ class UserLoginDialog(QDialog, ABookLogin):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login = UserLoginDialog()
-    sys.exit(app.exec_())
