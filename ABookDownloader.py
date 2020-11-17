@@ -218,36 +218,44 @@ def download_course_from_root(root_chapter, course_id, path):
             download_course_from_root(
                 child, course_id, path + child['name'] + '/')
     else:
-        download_link_url = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur=1".format(
-            course_id, root_chapter['id'])
-        download_url_base = "http://abook.hep.com.cn/ICourseFiles/"
-        while True:
-            try:
-                info = session.get(download_link_url).json()[0]
-                break
-            except:
-                logging.error(
-                    "Info fetched failed, will restart in 5 seconds.")
-                time.sleep(5)
-        if 'myMobileResourceList' in info:
-            course = info['myMobileResourceList']
-            print(len(course), "downloadable items found!")
-            for i in range(len(course)):
-                file_name = course[i]['resTitle']
-                file_url = course[i]['resFileUrl']
-                print(file_name)
-                url = download_url_base + file_url
-                print(url)
-                file_type = file_url[str(file_url).find('.'):]
-                location = path + str(file_name) + str(file_type)
-                while True:
-                    try:
-                        file_downloader(location, url)
-                        break
-                    except:
-                        logging.error(
-                            "Download failed, will restart in 5 seconds.")
-                        time.sleep(5)
+        cur = 1
+        all_page_downloaded = False
+        while all_page_downloaded == False:
+            download_link_url = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}".format(
+                course_id, root_chapter['id'], cur)
+            download_url_base = "http://abook.hep.com.cn/ICourseFiles/"
+            while True:
+                try:
+                    info = session.get(download_link_url).json()[0]
+                    break
+                except:
+                    logging.error(
+                        "Info fetched failed, will restart in 5 seconds.")
+                    time.sleep(5)
+            page = info['page']
+            page_count = page["pageCount"]
+            if page_count == cur:
+                all_page_downloaded = True
+            cur += 1
+            if 'myMobileResourceList' in info:
+                course = info['myMobileResourceList']
+                print(len(course), "downloadable items found!")
+                for i in range(len(course)):
+                    file_name = course[i]['resTitle']
+                    file_url = course[i]['resFileUrl']
+                    print(file_name)
+                    url = download_url_base + file_url
+                    print(url)
+                    file_type = file_url[str(file_url).find('.'):]
+                    location = path + str(file_name) + str(file_type)
+                    while True:
+                        try:
+                            file_downloader(location, url)
+                            break
+                        except:
+                            logging.error(
+                                "Download failed, will restart in 5 seconds.")
+                            time.sleep(5)
 
 
 def download_course(download_dir, selected_course, selected_root):
