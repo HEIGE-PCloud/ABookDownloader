@@ -153,7 +153,7 @@ def load_courses_info(file_name):
         except:
             logging.error("Cannot load courses.")
             return
-        print('There are {} course(s) availaible.'.format(len(courses_data)))
+        print('There are {} course(s) available.'.format(len(courses_data)))
         for course in courses_data:
             course['courseTitle'] = validate_file_name(course['courseTitle'])
             courses_list.append(course)
