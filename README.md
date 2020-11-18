@@ -6,9 +6,7 @@
 
 [点击下载](https://github.com/HEIGE-PCloud/ABookDownloader/releases/download/1.0.5.2/ABookDownloaderV1.0.5.2.exe)
 
-下载完成后解压缩
-
-然后进入解压完的目录，双击打开`ABookDownloader.exe`即可使用啦！
+双击打开`ABookDownloader.exe`即可使用啦！
 
 ## 已知问题
 
