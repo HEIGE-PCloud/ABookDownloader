@@ -12,6 +12,7 @@ class DownloadDirTreeWidget(QWidget):
         self.root_path = root_path
         dir_view = QTreeView()
         dir_view.clicked.connect(self.onClicked)
+        dir_view.doubleClicked.connect(self.onDoubleClicked)
         self.model = QFileSystemModel(dir_view)
         self.model.setRootPath(self.root_path)
 
@@ -48,6 +49,11 @@ class DownloadDirTreeWidget(QWidget):
 
     def onClicked(self, index):
         self.index = index
+
+    def onDoubleClicked(self, index):
+        self.index = index
+        if self.sender().model().isDir(index) == False:
+            self.open_file()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
