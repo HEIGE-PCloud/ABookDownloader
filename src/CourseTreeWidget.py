@@ -1,3 +1,4 @@
+from time import sleep
 from ABook import ABook
 from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
 from PySide2.QtGui import QImage, QStandardItem
@@ -123,18 +124,26 @@ class CourseTreeWidget(QWidget, ABook):
             if isinstance(resource_list, list):
                 for resource in resource_list:
                     res_name = resource["resTitle"]
+                    logo_name = resource['picUrl'][resource['picUrl'].rfind('/') + 1:]
                     url_base = "http://abook.hep.com.cn/ICourseFiles/"
                     res_file_url = url_base + resource["resFileUrl"]
-                    res_logo_url = url_base + resource["picUrl"]
-                    logo = requests.get(res_logo_url).content
+                    print(logo_name)
+                    if os.path.exists('./temp/cache/{}'.format(logo_name)):
+                        with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
+                            logo = file.read()
+                    else:
+                        res_logo_url = url_base + resource["picUrl"]
+                        logo = requests.get(res_logo_url).content
+                        with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
+                            file.write(logo)
                     res_logo = QImage()
                     res_logo.loadFromData(logo)
                     resource_item = QStandardItem(res_name)
-                    resource_item.setData(res_logo, Qt.DecorationRole)
+                    self.signal.appendRowFileListWidget.emit(resource_item)
                     resource_item.setData(res_file_url, Qt.ToolTipRole)
+                    resource_item.setData(res_logo, Qt.DecorationRole)
                     resource_item.setData(res_file_url, -1)
                     # self.fileListWidget.appendRow(resource_item)
-                    self.signal.appendRowFileListWidget.emit(resource_item)
     
     def debug(self):
         print(self.selected_list)
