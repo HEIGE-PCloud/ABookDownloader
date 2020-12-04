@@ -1,17 +1,20 @@
 from ABook import ABook
-from FileDownloader import FileDownloaderWidget
-from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QListView, QAbstractItemView, QTreeView, QGridLayout, QFileSystemModel, QTreeWidgetItem
-from PySide2.QtGui import QStandardItemModel, QImage, QStandardItem
-from PySide2.QtCore import QDir, Qt
+from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
+from PySide2.QtGui import QImage, QStandardItem
+from PySide2.QtCore import QObject, Qt, Signal
 import requests
 import os
 
+class CourseTreeWidgetSignals(QObject):
+    clearFileListWidget = Signal()
+    appendRowFileListWidget = Signal(QStandardItem)
 
 class CourseTreeWidget(QWidget, ABook):
 
     def __init__(self, path, settings, session):
         QWidget.__init__(self)
         ABook.__init__(self, path, settings, session)
+        self.signal = CourseTreeWidgetSignals()
         self.selected_list = []
         
         self.TreeWidget = QTreeWidget()
@@ -28,31 +31,13 @@ class CourseTreeWidget(QWidget, ABook):
 
         self.debug_button = QPushButton("Debug")
         self.debug_button.clicked.connect(self.debug)
-
-        self.ListView = QListView()
-        # self.ListView.setViewMode(QtWidgets.QListView.IconMode)
-        self.resource_list = QStandardItemModel()
-        self.ListView.setModel(self.resource_list)
-        self.ListView.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.ListView.doubleClicked.connect(self.open_resource)
-
-        # os.path.abspath(self.settings["download_path"])
-        print(QDir.currentPath())
-        tree_view = QTreeView()
-        filesystem_model = QFileSystemModel(tree_view)
-        filesystem_model.setRootPath(os.path.abspath(self.settings["download_path"]))
-        tree_view.setModel(filesystem_model)
-        tree_view.setRootIndex(filesystem_model.index(os.path.abspath(self.settings["download_path"])))
-
-        self.fileDownloadWidget = FileDownloaderWidget()
+    
         main_layout = QGridLayout()
         main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
-        main_layout.addWidget(self.ListView, 0, 2, 1, 2)
-        main_layout.addWidget(tree_view, 1, 0, 1, 2)
-        main_layout.addWidget(self.fileDownloadWidget, 1, 2, 1, 2)
         main_layout.addWidget(self.refresh_button, 2, 0, 1, 1)
         main_layout.addWidget(self.download_button, 3, 0, 1, 1)
         main_layout.addWidget(self.debug_button, 4, 0, 1, 1)
+        main_layout.setMargin(0)
         self.setLayout(main_layout)
 
         if self.course_list == []:
@@ -119,8 +104,7 @@ class CourseTreeWidget(QWidget, ABook):
                         if os.path.exists(download_dir) == False:
                             os.system("mkdir \"" + download_dir + "\"")
                         self.fileDownloadWidget.addDownloadTask(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])
-                    
-    
+
     def refresh_course_list_tree(self):
         self.refresh_course_list()
         self.TreeWidget.clear()
@@ -132,7 +116,8 @@ class CourseTreeWidget(QWidget, ABook):
         chapter_id = self.sender().currentItem().text(2)
         if course_id != "None" and chapter_id != "None":
             resource_list = self.get_resource_info(course_id, chapter_id)
-            self.resource_list.clear()
+            self.signal.clearFileListWidget.emit()
+            # self.fileListWidget.clear()
             if isinstance(resource_list, list):
                 for resource in resource_list:
                     res_name = resource["resTitle"]
@@ -145,12 +130,9 @@ class CourseTreeWidget(QWidget, ABook):
                     resource_item = QStandardItem(res_name)
                     resource_item.setData(res_logo, Qt.DecorationRole)
                     resource_item.setData(res_file_url, Qt.ToolTipRole)
-                    self.resource_list.appendRow(resource_item)
-
-    def open_resource(self):
-        item = self.resource_list.itemFromIndex(self.sender().currentIndex())
-        url = item.data(Qt.ToolTipRole)
-        os.system("explorer " + url)
+                    resource_item.setData(res_file_url, -1)
+                    # self.fileListWidget.appendRow(resource_item)
+                    self.signal.appendRowFileListWidget.emit(resource_item)
     
     def debug(self):
         print(self.selected_list)
