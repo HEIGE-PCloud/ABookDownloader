@@ -8,6 +8,7 @@ import os
 class CourseTreeWidgetSignals(QObject):
     clearFileListWidget = Signal()
     appendRowFileListWidget = Signal(QStandardItem)
+    addDownloadTask = Signal(str, str, str)
 
 class CourseTreeWidget(QWidget, ABook):
 
@@ -34,9 +35,9 @@ class CourseTreeWidget(QWidget, ABook):
     
         main_layout = QGridLayout()
         main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
-        main_layout.addWidget(self.refresh_button, 2, 0, 1, 1)
-        main_layout.addWidget(self.download_button, 3, 0, 1, 1)
-        main_layout.addWidget(self.debug_button, 4, 0, 1, 1)
+        main_layout.addWidget(self.refresh_button, 1, 0)
+        main_layout.addWidget(self.download_button, 1, 1)
+        # main_layout.addWidget(self.debug_button, 4, 0, 1, 1)
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
@@ -103,7 +104,8 @@ class CourseTreeWidget(QWidget, ABook):
                         download_dir, download_path, file_name = self.get_resource_path(item[1], item[2], resource["resourceInfoId"], resource["resTitle"], resource["resFileUrl"])
                         if os.path.exists(download_dir) == False:
                             os.system("mkdir \"" + download_dir + "\"")
-                        self.fileDownloadWidget.addDownloadTask(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])
+                        # self.fileDownloadWidget.addDownloadTask(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])
+                        self.signal.addDownloadTask.emit(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
 
     def refresh_course_list_tree(self):
         self.refresh_course_list()

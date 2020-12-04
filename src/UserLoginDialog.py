@@ -8,7 +8,7 @@ class ABookLogin(object):
 
     def __init__(self) -> None:
         super().__init__()
-
+        self.login_status = False
         self.user_info = {'loginUser.loginName': '', 'loginUser.loginPassword': ''}
         self.path = './temp/user_info.json'
         self.session = requests.session()
@@ -135,6 +135,7 @@ class UserLoginDialog(QDialog, ABookLogin):
     def handleLoginResponse(self, response):
         print(response)
         if response:
+            self.login_status = True
             self.close()
         else:
             QMessageBox.critical(self, 'Error', 'Login failed.')

@@ -1,5 +1,3 @@
-
-from logging import root
 import os
 import sys
 from PySide2.QtWidgets import QApplication, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QTreeView, QWidget

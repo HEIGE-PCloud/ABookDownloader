@@ -25,6 +25,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         mainLayout.addWidget(file_downloader, 1, 1)
         course_tree_widget.signal.clearFileListWidget.connect(file_list_widget.clear)
         course_tree_widget.signal.appendRowFileListWidget.connect(file_list_widget.appendRow)
+        course_tree_widget.signal.addDownloadTask.connect(file_downloader.addDownloadTask)
         self.setCentralWidget(mainWidget)
         self.init_menubar()
         self.setWindowTitle("ABookDownloader Dev")
@@ -50,6 +51,8 @@ class ABookDownloaderMainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     user = UserLoginDialog()
+    if user.login_status == False:
+        exit(0)
     settings = Settings('./temp/settings.json')
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()

@@ -109,51 +109,5 @@ class ABook(object):
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-
-
-# class MainWindow(QtWidgets.QMainWindow):
-#     def __init__(self, path, settings, session):
-#         QtWidgets.QMainWindow.__init__(self)
-#         course_tree_widget = CourseTreeWidget(path, settings, session)
-
-
-#         self.statusBar().showMessage('Here is the status bar')
-
-#         self.init_menubar()
-
-#         self.setCentralWidget(course_tree_widget)
-
-#         self.setWindowTitle("ABookDownloader Dev")
-#         self.resize(1920, 1080)
-
-#     def init_menubar(self):
-#         exitAction = QtWidgets.QAction('Exit', self)
-#         exitAction.setShortcut('Alt+F4')
-#         exitAction.setStatusTip('Quit')
-#         exitAction.triggered.connect(self.close)
-        
-#         aboutAction = QtWidgets.QAction('About', self)
-#         aboutAction.setStatusTip('About')
-        
-        
-#         self.menuBar().setNativeMenuBar(True)
-#         fileMenu = self.menuBar().addMenu('About')
-#         fileMenu.addAction(exitAction)
-
-#         # aboutMenu = self.menuBar().addMenu("&About")
-#         aboutQtAct = QtWidgets.QAction("About &Qt", self, triggered=QApplication.aboutQt)
-#         fileMenu.addAction(aboutQtAct)
-
-#     def about_msgbox(self):
-#         QtWidgets.QMessageBox()
-
-
 if __name__ == "__main__":
-    QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-    app = QtWidgets.QApplication(os.sys.argv)
-    user = UserLoginDialog()
-    settings = Settings('./temp/settings.json')
-    # abook = MainWindow('./temp/', settings, user)
-    # abook.show()
-    sys.exit(app.exec_())
+    pass
