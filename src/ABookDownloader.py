@@ -1,3 +1,4 @@
+import os
 import sys
 from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMessageBox, QWidget
 
@@ -47,8 +48,16 @@ class ABookDownloaderMainWindow(QMainWindow):
         aboutQtAct = QAction("About &Qt", self, triggered=QApplication.aboutQt)
         fileMenu.addAction(aboutQtAct)
 
+def init():
+    if os.path.exists('./Downloads') == False:
+        os.mkdir('Downloads')
+    if os.path.exists('temp') == False:
+        os.mkdir('temp')
+    if os.path.exists('./temp/cache') == False:
+        os.mkdir('./temp/cache')
 
 if __name__ == "__main__":
+    init()
     app = QApplication(sys.argv)
     user = UserLoginDialog()
     if user.login_status == False:

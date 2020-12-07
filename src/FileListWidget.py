@@ -3,6 +3,7 @@ import sys
 from PySide2.QtGui import QDesktopServices, QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QAbstractItemView, QApplication, QGridLayout, QListView, QPushButton, QWidget
 from PySide2.QtCore import QModelIndex, Qt
+
 class FileListWidget(QWidget):
 
     def __init__(self) -> None:
