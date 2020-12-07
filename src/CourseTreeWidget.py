@@ -1,8 +1,8 @@
-from time import sleep
+from json import load
 from ABook import ABook
 from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
 from PySide2.QtGui import QImage, QStandardItem
-from PySide2.QtCore import QObject, Qt, Signal
+from PySide2.QtCore import QObject, QThread, Qt, Signal
 import requests
 import os
 
@@ -23,7 +23,7 @@ class CourseTreeWidget(QWidget, ABook):
         self.TreeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
         # self.TreeWidget.setAlternatingRowColors(True)
         self.TreeWidget.itemChanged.connect(self.checkbox_toggled)
-        self.TreeWidget.doubleClicked.connect(self.get_resource_info_from_item)
+        self.TreeWidget.clicked.connect(self.get_resource_info_from_item)
 
         self.download_button = QPushButton("Download Selected")
         self.download_button.clicked.connect(self.download_selected)
@@ -32,7 +32,7 @@ class CourseTreeWidget(QWidget, ABook):
         self.refresh_button.clicked.connect(self.refresh_course_list_tree)
 
         self.debug_button = QPushButton("Debug")
-        self.debug_button.clicked.connect(self.debug)
+        # self.debug_button.clicked.connect(self.debug)
     
         main_layout = QGridLayout()
         main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
@@ -52,6 +52,10 @@ class CourseTreeWidget(QWidget, ABook):
             except:
                 pass
                 # self.refresh_course_list_tree()
+        self.TreeWidget.resizeColumnToContents(0)
+        self.TreeWidget.resizeColumnToContents(1)
+        self.TreeWidget.resizeColumnToContents(2)
+
 
     def checkbox_toggled(self, node: QTreeWidgetItem, column: int):
         if node.checkState(column) == Qt.Checked:
@@ -115,6 +119,7 @@ class CourseTreeWidget(QWidget, ABook):
             self.create_tree(self.TreeWidget, self.course_list[index], 'course', index)
 
     def get_resource_info_from_item(self):
+        self.TreeWidget.resizeColumnToContents(0)
         course_id = self.sender().currentItem().text(1)
         chapter_id = self.sender().currentItem().text(2)
         if course_id != "None" and chapter_id != "None":
@@ -122,28 +127,52 @@ class CourseTreeWidget(QWidget, ABook):
             self.signal.clearFileListWidget.emit()
             # self.fileListWidget.clear()
             if isinstance(resource_list, list):
+                resource_item_list = []
                 for resource in resource_list:
                     res_name = resource["resTitle"]
-                    logo_name = resource['picUrl'][resource['picUrl'].rfind('/') + 1:]
+                    # logo_name = resource['picUrl'][resource['picUrl'].rfind('/') + 1:]
                     url_base = "http://abook.hep.com.cn/ICourseFiles/"
                     res_file_url = url_base + resource["resFileUrl"]
-                    print(logo_name)
-                    if os.path.exists('./temp/cache/{}'.format(logo_name)):
-                        with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
-                            logo = file.read()
-                    else:
-                        res_logo_url = url_base + resource["picUrl"]
-                        logo = requests.get(res_logo_url).content
-                        with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
-                            file.write(logo)
-                    res_logo = QImage()
-                    res_logo.loadFromData(logo)
+                    # if os.path.exists('./temp/cache/{}'.format(logo_name)):
+                    #     with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
+                    #         logo = file.read()
+                    # else:
+                    #     res_logo_url = url_base + resource["picUrl"]
+                    #     logo = requests.get(res_logo_url).content
+                    #     with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
+                    #         file.write(logo)
+                    # res_logo = QImage()
+                    # res_logo.loadFromData(logo)
                     resource_item = QStandardItem(res_name)
                     self.signal.appendRowFileListWidget.emit(resource_item)
                     resource_item.setData(res_file_url, Qt.ToolTipRole)
-                    resource_item.setData(res_logo, Qt.DecorationRole)
+                    # resource_item.setData(res_logo, Qt.DecorationRole)
                     resource_item.setData(res_file_url, -1)
+                    resource_item.setData(resource['picUrl'], -2)
                     # self.fileListWidget.appendRow(resource_item)
-    
-    def debug(self):
-        print(self.selected_list)
+                    resource_item_list.append(resource_item)
+                load_pic_worker = LoadPicWorker(resource_item_list, self)
+                load_pic_worker.start()
+
+class LoadPicWorker(QThread):
+
+    def __init__(self, resource_item_list, parent=None) -> None:
+        super(LoadPicWorker, self).__init__(parent)
+        self.resource_item_list = resource_item_list
+        self.url_base = "http://abook.hep.com.cn/ICourseFiles/"
+
+    def run(self) -> None:
+        for resource_item in self.resource_item_list:
+            pic_url = resource_item.data(-2)
+            logo_name = pic_url[pic_url.rfind('/') + 1:]
+            if os.path.exists('./temp/cache/{}'.format(logo_name)):
+                with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
+                    logo = file.read()
+            else:
+                res_logo_url = self.url_base + pic_url
+                logo = requests.get(res_logo_url).content
+                with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
+                    file.write(logo)
+            res_logo = QImage()
+            res_logo.loadFromData(logo)
+            resource_item.setData(res_logo, Qt.DecorationRole)
