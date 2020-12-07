@@ -31,12 +31,12 @@ class FileDownloaderWidget(QWidget):
         self.signals.cancel_download.connect(self.cancelDownload)
         self.createTable()
 
-        self.layout = QVBoxLayout() 
+        self.layout = QGridLayout() 
         self.layout.setMargin(0)
-        self.layout.addWidget(self.tableWidget) 
-        self.layout.addWidget(self.hideFinishedCheckBox)
-        self.layout.addWidget(self.startDownloadButton)
-        self.layout.addWidget(self.clearDownloadListButton)
+        self.layout.addWidget(self.tableWidget, 0, 0, 1, 2) 
+        self.layout.addWidget(self.hideFinishedCheckBox, 1, 0)
+        self.layout.addWidget(self.startDownloadButton, 2, 0)
+        self.layout.addWidget(self.clearDownloadListButton, 2, 1)
         self.setLayout(self.layout) 
 
 
@@ -79,10 +79,8 @@ class FileDownloaderWidget(QWidget):
         progressBar.setAlignment(Qt.AlignCenter)
         progressBar.setFormat(str(progressBar.value()) + " %")
 
-        def emitCancelDownloadSignal(row):
-            self.signals.cancel_download.emit(row)
         cancelDownloadButton = QPushButton("Cancel")
-        cancelDownloadButton.clicked.connect(emitCancelDownloadSignal)
+        cancelDownloadButton.clicked.connect(self.emitCancelDownloadSignal)
 
         self.tableWidget.setItem(row, 0, fileNameItem)
         self.tableWidget.setItem(row, 1, progressBarItem)
@@ -94,6 +92,12 @@ class FileDownloaderWidget(QWidget):
         self.tableWidget.setItem(row, 6, operationItem)
         self.tableWidget.setCellWidget(row, 6, cancelDownloadButton)
         return row
+    def emitCancelDownloadSignal(self):
+        for row in range(self.tableWidget.rowCount()):
+            if self.tableWidget.cellWidget(row, 6) == self.sender():
+                print(row)
+                self.signals.cancel_download.emit(row)
+                return
 
     def addDownloadTask(self, file_name: str, file_path: str, url: str) -> None:
         row = self.addDownloadItem(file_name, file_path, url)
@@ -201,7 +205,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv) 
     download_widget = FileDownloaderWidget() 
     download_widget.show()
-    download_widget.addDownloadTask("Vultr", "C:\\Users\\HEIGE\\OneDrive\\Documents\\Code\\Sol\\test.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
-    download_widget.addDownloadTask("Vultr2", "C:\\Users\\HEIGE\\OneDrive\\Documents\\Code\\Sol\\test2.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
+    download_widget.addDownloadTask("test1", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test1.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
+    download_widget.addDownloadTask("test2", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test2.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
+    download_widget.addDownloadTask("test3", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test3.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
 
     sys.exit(app.exec_()) 
