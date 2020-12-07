@@ -1,10 +1,12 @@
 from json import load
 from ABook import ABook
-from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
+from PySide2.QtWidgets import QApplication, QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
 from PySide2.QtGui import QImage, QStandardItem
 from PySide2.QtCore import QObject, QThread, Qt, Signal
 import requests
 import os
+
+from ProgressBarDialog import ProgressBarDialog
 
 class CourseTreeWidgetSignals(QObject):
     clearFileListWidget = Signal()
@@ -16,12 +18,13 @@ class CourseTreeWidget(QWidget, ABook):
     def __init__(self, path, settings, session):
         QWidget.__init__(self)
         ABook.__init__(self, path, settings, session)
+
         self.signal = CourseTreeWidgetSignals()
         self.selected_list = []
-        
+        self.pd = ProgressBarDialog(0, 100, 0, 100)
+
         self.TreeWidget = QTreeWidget()
         self.TreeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
-        # self.TreeWidget.setAlternatingRowColors(True)
         self.TreeWidget.itemChanged.connect(self.checkbox_toggled)
         self.TreeWidget.clicked.connect(self.get_resource_info_from_item)
 
@@ -31,14 +34,10 @@ class CourseTreeWidget(QWidget, ABook):
         self.refresh_button = QPushButton("Refresh Course List")
         self.refresh_button.clicked.connect(self.refresh_course_list_tree)
 
-        self.debug_button = QPushButton("Debug")
-        # self.debug_button.clicked.connect(self.debug)
-    
         main_layout = QGridLayout()
         main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
         main_layout.addWidget(self.refresh_button, 1, 0)
         main_layout.addWidget(self.download_button, 1, 1)
-        # main_layout.addWidget(self.debug_button, 4, 0, 1, 1)
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
@@ -109,47 +108,53 @@ class CourseTreeWidget(QWidget, ABook):
                         download_dir, download_path, file_name = self.get_resource_path(item[1], item[2], resource["resourceInfoId"], resource["resTitle"], resource["resFileUrl"])
                         if os.path.exists(download_dir) == False:
                             os.system("mkdir \"" + download_dir + "\"")
-                        # self.fileDownloadWidget.addDownloadTask(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])
                         self.signal.addDownloadTask.emit(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
 
     def refresh_course_list_tree(self):
-        self.refresh_course_list()
-        self.TreeWidget.clear()
-        for index in range(len(self.course_list)):
-            self.create_tree(self.TreeWidget, self.course_list[index], 'course', index)
+        worker = RefreshCourseListWorker(self)
+        print("qwq")
+        self.pd.show()
+        worker.start()
+        # self.refresh_course_list()
+        # self.TreeWidget.clear()
+        # for index in range(len(self.course_list)):
+        #     self.create_tree(self.TreeWidget, self.course_list[index], 'course', index)
 
     def get_resource_info_from_item(self):
+        # When triggered on click, first adjust the width of the column
         self.TreeWidget.resizeColumnToContents(0)
+
+        # Get the course_id and chapter_id
         course_id = self.sender().currentItem().text(1)
         chapter_id = self.sender().currentItem().text(2)
+
+        # Ignore the root nodes
         if course_id != "None" and chapter_id != "None":
+
+            # Get the resource list
             resource_list = self.get_resource_info(course_id, chapter_id)
+            # Clear the FileListWidget
             self.signal.clearFileListWidget.emit()
-            # self.fileListWidget.clear()
+            # If resource list is not empty
             if isinstance(resource_list, list):
+                # Each resource item is a QStandardItem
+                # data role -1 stores the url of the resource
+                # data role -2 stores the url of the preview image of the resource
+                # data role Qt.TooltipRole stores the url of the resource
+                # data role Qt.DecorationRole stores the preview image of the resource
+                # We need to lazy load and cache the preview image so that the main thread will not be blocked
+                # 1. create items without the Qt.DecorationRole and add it to resource_item_list
+                # 2. pass the resource_item_list to LoadPicWorker to cache and load
                 resource_item_list = []
                 for resource in resource_list:
                     res_name = resource["resTitle"]
-                    # logo_name = resource['picUrl'][resource['picUrl'].rfind('/') + 1:]
                     url_base = "http://abook.hep.com.cn/ICourseFiles/"
                     res_file_url = url_base + resource["resFileUrl"]
-                    # if os.path.exists('./temp/cache/{}'.format(logo_name)):
-                    #     with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
-                    #         logo = file.read()
-                    # else:
-                    #     res_logo_url = url_base + resource["picUrl"]
-                    #     logo = requests.get(res_logo_url).content
-                    #     with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
-                    #         file.write(logo)
-                    # res_logo = QImage()
-                    # res_logo.loadFromData(logo)
                     resource_item = QStandardItem(res_name)
-                    self.signal.appendRowFileListWidget.emit(resource_item)
                     resource_item.setData(res_file_url, Qt.ToolTipRole)
-                    # resource_item.setData(res_logo, Qt.DecorationRole)
                     resource_item.setData(res_file_url, -1)
                     resource_item.setData(resource['picUrl'], -2)
-                    # self.fileListWidget.appendRow(resource_item)
+                    self.signal.appendRowFileListWidget.emit(resource_item)
                     resource_item_list.append(resource_item)
                 load_pic_worker = LoadPicWorker(resource_item_list, self)
                 load_pic_worker.start()
@@ -163,16 +168,45 @@ class LoadPicWorker(QThread):
 
     def run(self) -> None:
         for resource_item in self.resource_item_list:
+            # Read the url of the picture and the name of the logo
             pic_url = resource_item.data(-2)
             logo_name = pic_url[pic_url.rfind('/') + 1:]
+            # Check if it has been cached before
             if os.path.exists('./temp/cache/{}'.format(logo_name)):
                 with open('./temp/cache/{}'.format(logo_name), 'rb') as file:
                     logo = file.read()
             else:
+                # Get and save the picture
                 res_logo_url = self.url_base + pic_url
                 logo = requests.get(res_logo_url).content
                 with open('./temp/cache/{}'.format(logo_name), 'wb') as file:
                     file.write(logo)
+            # Set the image for Qt.DecorationRole
             res_logo = QImage()
             res_logo.loadFromData(logo)
             resource_item.setData(res_logo, Qt.DecorationRole)
+
+class RefreshCourseListWorker(QThread):
+
+    def __init__(self, parent=None):
+        super(RefreshCourseListWorker, self).__init__(parent)
+        self.parent = parent
+    
+    def run(self):
+        pass
+        self.parent.refresh_course_list_signals.courseSignal.connect(self.handleCourseSignal)
+        self.parent.refresh_course_list_signals.chapterSignal.connect(self.handleChapterSignal)
+        self.parent.refresh_course_list()
+        self.parent.pd.close()
+        self.parent.TreeWidget.clear()
+        for index in range(len(self.parent.course_list)):
+            self.parent.create_tree(self.parent.TreeWidget, self.parent.course_list[index], 'course', index)
+
+
+    def handleCourseSignal(self, cur: int, max: int):
+        self.parent.pd.setValue_1(cur)
+        self.parent.pd.setMaximum_1(max)
+
+    def handleChapterSignal(self, name:str, cur: int, max: int):
+        self.parent.pd.setValue_2(cur)
+        self.parent.pd.setMaximum_2(max)

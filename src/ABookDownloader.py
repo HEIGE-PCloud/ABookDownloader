@@ -1,7 +1,6 @@
 import os
 import sys
-from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMessageBox, QWidget
-
+from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow,  QWidget
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
 from FileDownloader import FileDownloaderWidget

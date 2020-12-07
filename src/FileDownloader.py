@@ -20,15 +20,19 @@ class FileDownloaderWidget(QWidget):
         self.tableWidget = QTableWidget() 
         self.initLayout()
         
-        
     def initLayout(self) -> None:
+
         self.startDownloadButton = QPushButton("Start Download")
         self.startDownloadButton.clicked.connect(self.startDownload)
+        
         self.clearDownloadListButton = QPushButton("Clear List")
         self.clearDownloadListButton.clicked.connect(self.clearDownloadList)
+        
         self.hideFinishedCheckBox = QCheckBox("Hide Finished")
         self.hideFinishedCheckBox.toggled.connect(self.hideFinished)
+        
         self.signals.cancel_download.connect(self.cancelDownload)
+
         self.createTable()
 
         self.layout = QGridLayout() 
@@ -41,7 +45,7 @@ class FileDownloaderWidget(QWidget):
 
 
     def createTable(self): 
-        # File name | Progress Bar | Speed | Status | Url | File Path
+        # File name | Progress Bar | Speed | Status | Url | File Path | Cancel Button
         self.tableWidget.setColumnCount(7) 
         self.tableWidget.setRowCount(0)
         self.tableWidget.setHorizontalHeaderItem(0, QTableWidgetItem("File Name"))
@@ -205,8 +209,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv) 
     download_widget = FileDownloaderWidget() 
     download_widget.show()
-    download_widget.addDownloadTask("test1", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test1.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
-    download_widget.addDownloadTask("test2", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test2.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
-    download_widget.addDownloadTask("test3", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test3.bin", "https://gdrive.planet-cloud.fun/0:/1/iTunes64Setup.exe")
+    download_widget.addDownloadTask("test1", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test1.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
+    download_widget.addDownloadTask("test2", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test2.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
+    download_widget.addDownloadTask("test3", "C:\\Users\\HEIGE\\OneDrive\\Desktop\\test3.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
 
     sys.exit(app.exec_()) 

@@ -8,17 +8,24 @@ class FileListWidget(QWidget):
 
     def __init__(self) -> None:
         QWidget.__init__(self)
+
+        # self.index stores the index of the latest item which is clicked 
         self.index = None
-        file_view = QListView()
+        
         self.model = QStandardItemModel()
+        
+        file_view = QListView()
         file_view.setModel(self.model)
         file_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         file_view.clicked.connect(self.onClicked)
         file_view.doubleClicked.connect(self.onDoubleClicked)
+        
         open_file_button = QPushButton('Open')
         open_file_button.clicked.connect(self.onOpenFile)
+        
         preview_file_button = QPushButton('Preview')
         preview_file_button.clicked.connect(self.onPreviewFile)
+        
         layout = QGridLayout()
         layout.addWidget(file_view, 0, 0, 1, 2)
         layout.addWidget(open_file_button, 1, 0, 1, 1)
@@ -33,21 +40,25 @@ class FileListWidget(QWidget):
         self.model.appendRow(item)
 
     def onDoubleClicked(self, index: QModelIndex):
+        # Update self.index and open the file in browser
         self.index = index
         item = self.model.itemFromIndex(self.index)
         url = item.data(-1)
         QDesktopServices.openUrl(url)
 
     def onClicked(self, index: QModelIndex):
+        # Update self.index
         self.index = index
 
     def onOpenFile(self):
+        # Open file in browser
         if self.index != None:
             item = self.model.itemFromIndex(self.index)
             url = item.data(-1)
             QDesktopServices.openUrl(url)
 
     def onPreviewFile(self):
+        # User Office 365 Api to preview word/powerpoint/excel documents in browser
         if self.index != None:
             item = self.model.itemFromIndex(self.index)
             url = 'http://view.officeapps.live.com/op/view.aspx?src=' + item.data(-1)
@@ -63,7 +74,5 @@ if __name__ == '__main__':
     item2 = QStandardItem('item 2')
     item2.setData('Data Role', -1)
     item2.setData('Display Role', Qt.DisplayRole)
-    
     list_widget.appendRow(item2)
-    
     sys.exit(app.exec_())
