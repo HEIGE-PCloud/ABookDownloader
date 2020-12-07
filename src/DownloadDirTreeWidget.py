@@ -1,6 +1,6 @@
 import os
 import sys
-from PySide2.QtWidgets import QApplication, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QTreeView, QWidget
+from PySide2.QtWidgets import QApplication, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QSizePolicy, QTreeView, QWidget
 import subprocess
 
 class DownloadDirTreeWidget(QWidget):
@@ -27,15 +27,17 @@ class DownloadDirTreeWidget(QWidget):
         change_path_button = QPushButton('Change Directory')
         change_path_button.clicked.connect(self.onChangeButtonClicked)
         layout = QGridLayout()
-        layout.addWidget(self.dir_view, 1, 0, 1, 2)
-        layout.addWidget(open_button, 2, 0)
-        layout.addWidget(open_in_file_explorer_button, 2, 1)
+        self.root_path_line_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.root_path_line_edit.adjustSize()
         layout.addWidget(self.root_path_line_edit, 0, 0, 1, 1)
         layout.addWidget(change_path_button, 0, 1, 1, 1)
+        layout.addWidget(self.dir_view, 1, 0, 1, 2)
+        layout.addWidget(open_button, 2, 0, 1, 1)
+        layout.addWidget(open_in_file_explorer_button, 2, 1, 1, 1)
         layout.setMargin(0)
         self.setLayout(layout)
         self.show()
-
+        
     def setRootPath(self, root_path):
         self.root_path = os.path.abspath(root_path)
 
@@ -54,6 +56,7 @@ class DownloadDirTreeWidget(QWidget):
             subprocess.run(['explorer', '/select,', file_path])
 
     def onFileItemClicked(self, index):
+        self.dir_view.resizeColumnToContents(0)
         self.index = index
 
     def onFileItemDoubleClicked(self, index):
