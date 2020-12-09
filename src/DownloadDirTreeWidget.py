@@ -1,6 +1,6 @@
 import os
 import sys
-from PySide2.QtWidgets import QApplication, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QSizePolicy, QTreeView, QWidget
+from PySide2.QtWidgets import QApplication, QCompleter, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QSizePolicy, QTreeView, QWidget
 import subprocess
 
 class DownloadDirTreeWidget(QWidget):
@@ -35,6 +35,10 @@ class DownloadDirTreeWidget(QWidget):
         change_path_button = QPushButton('Change Directory')
         change_path_button.clicked.connect(self.onChangeButtonClicked)
         
+        addressCompleter = QCompleter()
+        addressCompleter.setModel(self.model)
+        self.root_path_line_edit.setCompleter(addressCompleter)
+
         # Set layout
         layout = QGridLayout()
         layout.addWidget(self.root_path_line_edit, 0, 0, 1, 1)
@@ -81,7 +85,11 @@ class DownloadDirTreeWidget(QWidget):
 
     def onChangeLineEditReturned(self):
         new_path = self.root_path_line_edit.text()
-        self.changeRootPath(new_path)
+        if os.path.isdir(new_path):
+            self.changeRootPath(new_path)
+        else:
+            subprocess.run(['explorer', new_path])
+            self.root_path_line_edit.setText(self.root_path)
 
     def changeRootPath(self, new_path: str):
         if os.path.exists(new_path):
