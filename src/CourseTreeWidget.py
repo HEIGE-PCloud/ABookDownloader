@@ -1,6 +1,6 @@
 from json import load
 from ABook import ABook
-from PySide2.QtWidgets import QApplication, QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
+from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
 from PySide2.QtGui import QImage, QStandardItem
 from PySide2.QtCore import QObject, QThread, Qt, Signal
 import requests
@@ -54,6 +54,10 @@ class CourseTreeWidget(QWidget, ABook):
         self.TreeWidget.resizeColumnToContents(0)
         self.TreeWidget.resizeColumnToContents(1)
         self.TreeWidget.resizeColumnToContents(2)
+        # self.setContextMenuPolicy(Qt.ActionsContextMenu)
+        # action = QAction(self.TreeWidget)
+        # action.setText('qwq')
+        # self.TreeWidget.addAction(action)
 
 
     def checkbox_toggled(self, node: QTreeWidgetItem, column: int):
@@ -113,6 +117,7 @@ class CourseTreeWidget(QWidget, ABook):
     def refresh_course_list_tree(self):
         worker = RefreshCourseListWorker(self)
         print("qwq")
+        self.setDisabled(True)
         self.pd.show()
         worker.start()
         # self.refresh_course_list()
@@ -201,12 +206,13 @@ class RefreshCourseListWorker(QThread):
         self.parent.TreeWidget.clear()
         for index in range(len(self.parent.course_list)):
             self.parent.create_tree(self.parent.TreeWidget, self.parent.course_list[index], 'course', index)
+        self.parent.setDisabled(False)
 
 
     def handleCourseSignal(self, cur: int, max: int):
         self.parent.pd.setValue_1(cur)
         self.parent.pd.setMaximum_1(max)
 
-    def handleChapterSignal(self, name:str, cur: int, max: int):
+    def handleChapterSignal(self, name: str, cur: int, max: int):
         self.parent.pd.setValue_2(cur)
         self.parent.pd.setMaximum_2(max)
