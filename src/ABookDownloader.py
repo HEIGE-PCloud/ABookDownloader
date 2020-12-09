@@ -1,6 +1,7 @@
 import os
 import sys
-from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow,  QWidget
+from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMenu,  QWidget
+from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
 from FileDownloader import FileDownloaderWidget
@@ -28,6 +29,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         course_tree_widget.signal.addDownloadTask.connect(file_downloader.addDownloadTask)
         self.setCentralWidget(mainWidget)
         self.init_menubar()
+        self.setFont('Microsoft YaHei UI')
         self.setWindowTitle("ABookDownloader Dev")
         self.resize(1920, 1080)
 
@@ -40,12 +42,24 @@ class ABookDownloaderMainWindow(QMainWindow):
         aboutAction = QAction('About', self)
         aboutAction.setStatusTip('About')
         
-        self.menuBar().setNativeMenuBar(True)
-        fileMenu = self.menuBar().addMenu('About')
-        fileMenu.addAction(exitAction)
+        updateAction = QAction('Check Updates', self)
+        updateAction.setStatusTip('Check Update')
+        updateAction.triggered.connect(self.checkUpdate)
 
-        aboutQtAct = QAction("About &Qt", self, triggered=QApplication.aboutQt)
-        fileMenu.addAction(aboutQtAct)
+        aboutQtAction = QAction("About Qt", self)
+        aboutQtAction.triggered.connect(QApplication.aboutQt)
+
+        self.menuBar().setNativeMenuBar(True)
+        fileMenu = QMenu('About')
+        fileMenu.addAction
+        fileMenu.addAction(exitAction)
+        fileMenu.addAction(aboutQtAction)
+        fileMenu.addAction(updateAction)
+        self.menuBar().addMenu(fileMenu)
+
+    def checkUpdate(self):
+        checkUpdateDialog = CheckUpdateDialog()
+        checkUpdateDialog.exec_()
 
 def init():
     if os.path.exists('./Downloads') == False:
