@@ -1,9 +1,10 @@
 import os
 import sys
-from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMenu,  QWidget
+from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMenu, QWidget
 from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
+from ErrorMessageBox import ErrorMessageBox
 from FileDownloader import FileDownloaderWidget
 from FileListWidget import FileListWidget
 from Settings import Settings
@@ -31,7 +32,8 @@ class ABookDownloaderMainWindow(QMainWindow):
         self.init_menubar()
         self.setFont('Microsoft YaHei UI')
         self.setWindowTitle("ABookDownloader Dev")
-        self.resize(1920, 1080)
+        self.showMaximized()
+        sys.stderr = ErrorMessageBox()
 
     def init_menubar(self):
         exitAction = QAction('Exit', self)
@@ -49,17 +51,24 @@ class ABookDownloaderMainWindow(QMainWindow):
         aboutQtAction = QAction("About Qt", self)
         aboutQtAction.triggered.connect(QApplication.aboutQt)
 
+        debugAction = QAction('Debug', self)
+        debugAction.triggered.connect(self.debug)
+
         self.menuBar().setNativeMenuBar(True)
         fileMenu = QMenu('About')
         fileMenu.addAction
         fileMenu.addAction(exitAction)
         fileMenu.addAction(aboutQtAction)
         fileMenu.addAction(updateAction)
+        fileMenu.addAction(debugAction)
         self.menuBar().addMenu(fileMenu)
 
     def checkUpdate(self):
         checkUpdateDialog = CheckUpdateDialog()
         checkUpdateDialog.exec_()
+    
+    def debug(self):
+        raise SystemError
 
 def init():
     if os.path.exists('./Downloads') == False:
@@ -70,12 +79,14 @@ def init():
         os.mkdir('./temp/cache')
 
 if __name__ == "__main__":
-    init()
     app = QApplication(sys.argv)
-    user = UserLoginDialog()
-    if user.login_status == False:
-        exit(0)
+    init()
     settings = Settings('./temp/settings.json')
+    user = UserLoginDialog()
+    if settings['debug'] == False:
+        user.exec_()
+        if user.login_status == False:
+            exit(0)
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()
     sys.exit(app.exec_())

@@ -113,7 +113,6 @@ class UserLoginDialog(QDialog, ABookLogin):
         QDialog.__init__(self)
         ABookLogin.__init__(self)
         self.initLayout()
-        self.exec_()
     
     def initLayout(self):
         self.login_widget =  LoginWidget(self)
