@@ -71,13 +71,11 @@ class ABookDownloaderMainWindow(QMainWindow):
         raise SystemError
 
 def init():
-    if os.path.exists('./Downloads') == False:
-        os.mkdir('Downloads')
-    if os.path.exists('temp') == False:
-        os.mkdir('temp')
-    if os.path.exists('./temp/cache') == False:
-        os.mkdir('./temp/cache')
-
+    dirList = ['./Downloads', './temp', './temp/jsonCache', './temp/picCache']
+    for dir in dirList:
+        if os.path.exists(dir) == False:
+            os.mkdir(dir)
+            
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     init()
