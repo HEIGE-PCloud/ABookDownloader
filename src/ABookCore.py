@@ -1,16 +1,10 @@
 import os
 import json
 import logging
-from PySide2.QtCore import QObject, Signal
 from PySide2.QtWidgets import QApplication
 
 from UserLoginDialog import UserLoginDialog
 from Settings import Settings
-
-class RefreshCourseListSignals(QObject):
-    courseSignal = Signal(int, int)
-    chapterSignal = Signal(str, int, int)
-
 
 class ABookCore(object):
     def __init__(self, path: str, settings: Settings, user: UserLoginDialog):
@@ -23,14 +17,6 @@ class ABookCore(object):
         self.courseListUrl = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur={}"
         self.chapterListUrl = "http://abook.hep.com.cn/resourceStructure.action?courseInfoId={}"
         self.resourceListUrl = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}"
-        self.signals = RefreshCourseListSignals()        
-
-    # Interfaces:
-    # refresh(): get all courses and chapter information again
-    # getCourseList(): return all courses' name and id in a list [{'course_id': course_id, 'course_name': course_name}]
-    # getChapterList(course_id): return all chapters' name and id in a list [{'chapter_id': chapter_id, 'chapter_name': chapter_name}]
-    # getResList(course_id, chapter_id): return all information of the downloadable resources in a chapter in a list
-    # getResPath()
 
     def getData(self, cachePath: str, urlBase: str, urlArgs: list):
         """
@@ -52,7 +38,7 @@ class ABookCore(object):
         if os.path.exists(cachePath):
             # If the local json file is broken, then fallback to web api
             try:
-                data = self.load_json_from_file(cachePath)
+                data = self.loadJsonFromFile(cachePath)
                 self.cache[cachePath] = data
                 return data
             except:
@@ -62,7 +48,7 @@ class ABookCore(object):
         data = self.session.get(urlBase.format(*urlArgs)).json()
         self.cache[cachePath] = data
         try:
-            self.save_json_to_file(cachePath, data)
+            self.saveJsonToFile(cachePath, data)
         except:
             pass
 
@@ -88,13 +74,13 @@ class ABookCore(object):
             urlBase = self.courseListUrl
             cur = argv
             username = self.user.user_info['loginUser.loginName']
-            cachePath = './temp/courseList({})({}).json'.format(username, cur)
+            cachePath = './temp/jsonCache/courseList({})({}).json'.format(username, cur)
             return self.getData(cachePath, urlBase, [cur])
 
         elif type == 'chapterList':
             urlBase = self.chapterListUrl
             courseId = argv
-            cachePath = './temp/chapterList({}).json'.format(courseId)
+            cachePath = './temp/jsonCache/chapterList({}).json'.format(courseId)
             return self.getData(cachePath, urlBase, [courseId])
 
         elif type == 'resourceList':
@@ -102,11 +88,11 @@ class ABookCore(object):
             courseId = argv[0]
             chapterId = argv[1]
             cur = argv[2]
-            cachePath = './temp/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
+            cachePath = './temp/jsonCache/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
             return self.getData(cachePath, urlBase, [courseId, chapterId, cur])
 
         else:
-            raise IndexError('Wrong! TODO')
+            raise IndexError("Wrong Index! Only 'courseList', 'chapterList', 'resourceList' are accepted.")
 
     def getCourseList(self):
         """
@@ -126,14 +112,14 @@ class ABookCore(object):
         
     def getChapterList(self, courseId):
         """
-        getChapterList returns the chapterList under the courseId
+        getChapterList() returns the chapterList under the courseId
         """
         chapterList = self.get('chapterList', courseId)
         return chapterList
 
     def getResourceList(self, courseId, chapterId):
         """
-        getResourceList returns the resourceList under the courseId and ChapterId
+        getResourceList() returns the resourceList under the courseId and ChapterId
         """
         cur = 1
         resourceList = []
@@ -210,11 +196,11 @@ class ABookCore(object):
         filePath = dirPath + resourceName + resourceType
         return (dirPath, filePath, resourceName)
 
-    def save_json_to_file(self, path, data):
+    def saveJsonToFile(self, path, data):
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-    def load_json_from_file(self, path):
+    def loadJsonFromFile(self, path):
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)
     
