@@ -6,7 +6,7 @@ class Settings(object):
 
         self.path = path
         self.settings = {}
-        self.DEFAULT_SETTINGS = {'download_path' : './Downloads/', 'debug': False}
+        self.DEFAULT_SETTINGS = {'download_path' : './Downloads/', 'debug': False, 'proxy': None}
         
         self.read_settings_from_file()
 

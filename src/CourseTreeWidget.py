@@ -26,10 +26,10 @@ class CourseTreeWidget(QWidget, ABook):
         self.TreeWidget = QTreeWidget()
         self.TreeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
         self.TreeWidget.itemChanged.connect(self.checkbox_toggled)
-        self.TreeWidget.clicked.connect(self.get_resource_info_from_item)
+        self.TreeWidget.clicked.connect(self.loadResourceList)
 
         self.download_button = QPushButton("Download Selected")
-        self.download_button.clicked.connect(self.download_selected)
+        self.download_button.clicked.connect(self.addDownloadTask)
 
         self.refresh_button = QPushButton("Refresh Course List")
         self.refresh_button.clicked.connect(self.refresh_course_list_tree)
@@ -41,15 +41,26 @@ class CourseTreeWidget(QWidget, ABook):
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
-        if self.course_list == []:
-            pass
-            # self.refresh_course_list_tree()
-        else:
-            try:
-                for index in range(len(self.course_list)):
-                    self.create_tree(self.TreeWidget, self.course_list[index], 'course', index)
-            except:
-                pass
+        # if self.course_list == []:
+        #     pass
+        #     # self.refresh_course_list_tree()
+        # else:
+        #     try:
+                # for index in range(len(self.course_list)):
+                #     self.createTree(self.TreeWidget, self.course_list[index], 'course', index)
+        courseList = self.getCourseList()
+        for course in courseList:
+            # courseName = course['courseTitle']
+            # courseId = course['courseInfoId']
+            # courseItem = self.createCourseTreeItem(courseName, courseId, 'None', True)
+            # self.createTree(self.TreeWidget, 'course')
+            # self.TreeWidget.addTopLevelItem(courseItem)
+            courseId = course['courseInfoId']
+            currentChapterList = self.getChapterList(courseId)
+            self.createTree(self.TreeWidget, 'course', course, currentChapterList, courseId)
+                    
+            # except:
+            #     pass
                 # self.refresh_course_list_tree()
         self.TreeWidget.resizeColumnToContents(0)
         self.TreeWidget.resizeColumnToContents(1)
@@ -58,7 +69,26 @@ class CourseTreeWidget(QWidget, ABook):
         # action = QAction(self.TreeWidget)
         # action.setText('qwq')
         # self.TreeWidget.addAction(action)
-
+    def createTree(self, parentItem, itemType, itemData, chapterList, courseId):
+        if itemType == 'course':
+            courseName = itemData['courseTitle']
+            courseId = itemData['courseInfoId']
+            courseItem = self.createCourseTreeItem(courseName, courseId, 'None', True)
+            parentItem.addTopLevelItem(courseItem)
+            childChapterList = self.getChildChapterList(chapterList, {'id': 0})
+            self.createTree(courseItem, 'chapter', childChapterList, chapterList, courseId)
+        elif itemType == 'chapter':
+            for chapter in itemData:
+                childChapterList = self.getChildChapterList(chapterList, chapter)
+                chapterName = chapter['name']
+                chapterId = chapter['id']
+                hasChild = len(childChapterList) > 0
+                chapterItem = self.createCourseTreeItem(chapterName, courseId, chapterId, hasChild)
+                parentItem.addChild(chapterItem)
+                if hasChild:
+                    self.createTree(chapterItem, 'course', childChapterList, chapterList, courseId)
+        else:
+            raise KeyError('Wrong TODO')
 
     def checkbox_toggled(self, node: QTreeWidgetItem, column: int):
         if node.checkState(column) == Qt.Checked:
@@ -69,12 +99,12 @@ class CourseTreeWidget(QWidget, ABook):
             else:
                 self.selected_list = []
 
-    def create_item(self, node_name: str, course_id: str, chapter_id: str, has_child: bool):
+    def createCourseTreeItem(self, name: str, courseId: str, chapterId: str, hasChild: bool):
         item = QTreeWidgetItem()
-        item.setText(0, str(node_name))
-        item.setText(1, str(course_id))
-        item.setText(2, str(chapter_id))
-        if has_child == True:
+        item.setText(0, str(name))
+        item.setText(1, str(courseId))
+        item.setText(2, str(chapterId))
+        if hasChild == True:
             item.setFlags(item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         else:
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
@@ -90,7 +120,7 @@ class CourseTreeWidget(QWidget, ABook):
             
     def create_tree(self, parent_node, node_data, node_type, course_index):
         if node_type == 'course':
-            tree_item = self.create_item(node_data['courseTitle'], node_data['courseInfoId'], None, True)
+            tree_item = self.createCourseTreeItem(node_data['courseTitle'], node_data['courseInfoId'], None, True)
             parent_node.addTopLevelItem(tree_item)
             root_chapter = {'id': 0}
             child_chapter = self.child(self.course_list[course_index]['chapter'], root_chapter)
@@ -103,16 +133,21 @@ class CourseTreeWidget(QWidget, ABook):
                 if len(child_chapter) > 0:
                     self.create_tree(tree_item, child_chapter, 'chapter', course_index)
     
-    def download_selected(self):
+    def addDownloadTask(self):
         for item in self.selected_list:
             if item[1] != "None" and item[2] != "None":
-                download_list = self.get_resource_info(item[1], item[2])
-                if download_list != None:
-                    for resource in download_list:
-                        download_dir, download_path, file_name = self.get_resource_path(item[1], item[2], resource["resourceInfoId"], resource["resTitle"], resource["resFileUrl"])
-                        if os.path.exists(download_dir) == False:
-                            os.system("mkdir \"" + download_dir + "\"")
-                        self.signal.addDownloadTask.emit(file_name, download_path, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
+                # download_list = self.get_resource_info(item[1], item[2])
+                courseId = item[1]
+                chapterId = item[2]
+                downloadList = self.getResourceList(courseId, chapterId)
+                if downloadList != None:
+                    for resource in downloadList:
+                        # fileDir, filePath, fileName = self.get_resource_path(item[1], item[2], resource["resourceInfoId"], resource["resTitle"], resource["resFileUrl"])
+                        fileDir, filePath, fileName = self.getResourcePath(courseId, chapterId, resource["resourceInfoId"])
+                        if os.path.exists(fileDir) == False:
+                            os.mkdir(fileDir)
+                            # os.system("mkdir \"" + fileDir + "\"")
+                        self.signal.addDownloadTask.emit(fileName, filePath, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
 
     def refresh_course_list_tree(self):
         worker = RefreshCourseListWorker(self)
@@ -125,23 +160,26 @@ class CourseTreeWidget(QWidget, ABook):
         # for index in range(len(self.course_list)):
         #     self.create_tree(self.TreeWidget, self.course_list[index], 'course', index)
 
-    def get_resource_info_from_item(self):
+    def loadResourceList(self):
         # When triggered on click, first adjust the width of the column
         self.TreeWidget.resizeColumnToContents(0)
+        self.TreeWidget.resizeColumnToContents(1)
+        self.TreeWidget.resizeColumnToContents(2)
 
         # Get the course_id and chapter_id
-        course_id = self.sender().currentItem().text(1)
-        chapter_id = self.sender().currentItem().text(2)
+        courseId = self.sender().currentItem().text(1)
+        chapterId = self.sender().currentItem().text(2)
 
         # Ignore the root nodes
-        if course_id != "None" and chapter_id != "None":
+        if courseId != "None" and chapterId != "None":
 
             # Get the resource list
-            resource_list = self.get_resource_info(course_id, chapter_id)
+            # resource_list = self.get_resource_info(courseId, chapterId)
+            resourceList = self.getResourceList(courseId, chapterId)
             # Clear the FileListWidget
             self.signal.clearFileListWidget.emit()
             # If resource list is not empty
-            if isinstance(resource_list, list):
+            if isinstance(resourceList, list):
                 # Each resource item is a QStandardItem
                 # data role -1 stores the url of the resource
                 # data role -2 stores the url of the preview image of the resource
@@ -150,19 +188,19 @@ class CourseTreeWidget(QWidget, ABook):
                 # We need to lazy load and cache the preview image so that the main thread will not be blocked
                 # 1. create items without the Qt.DecorationRole and add it to resource_item_list
                 # 2. pass the resource_item_list to LoadPicWorker to cache and load
-                resource_item_list = []
-                for resource in resource_list:
+                resourceItemList = []
+                for resource in resourceList:
                     res_name = resource["resTitle"]
-                    url_base = "http://abook.hep.com.cn/ICourseFiles/"
-                    res_file_url = url_base + resource["resFileUrl"]
-                    resource_item = QStandardItem(res_name)
-                    resource_item.setData(res_file_url, Qt.ToolTipRole)
-                    resource_item.setData(res_file_url, -1)
-                    resource_item.setData(resource['picUrl'], -2)
-                    self.signal.appendRowFileListWidget.emit(resource_item)
-                    resource_item_list.append(resource_item)
-                load_pic_worker = LoadPicWorker(resource_item_list, self)
-                load_pic_worker.start()
+                    urlBase = "http://abook.hep.com.cn/ICourseFiles/"
+                    resFileUrl = urlBase + resource["resFileUrl"]
+                    resourceItem = QStandardItem(res_name)
+                    resourceItem.setData(resFileUrl, Qt.ToolTipRole)
+                    resourceItem.setData(resFileUrl, -1)
+                    resourceItem.setData(resource['picUrl'], -2)
+                    self.signal.appendRowFileListWidget.emit(resourceItem)
+                    resourceItemList.append(resourceItem)
+                loadPicWorker = LoadPicWorker(resourceItemList, self)
+                loadPicWorker.start()
 
 class LoadPicWorker(QThread):
 

@@ -19,8 +19,12 @@ class ABook(object):
         super().__init__()
         self.settings = settings
         self.session = user.session
+        self.user = user
         self.path = path
-        self.course_list_url = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur=1"
+        self.cache = {}
+        self.courseListUrl = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur={}"
+        self.chapterListUrl = "http://abook.hep.com.cn/resourceStructure.action?courseInfoId={}"
+        self.resourceListUrl = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}"
         self.course_list = []
         self.course_list_path = '{}course_list({}).json'.format(self.path, user.user_info['loginUser.loginName'])
         self.refresh_course_list_signals = RefreshCourseListSignals()        
@@ -36,11 +40,140 @@ class ABook(object):
     # getResList(course_id, chapter_id): return all information of the downloadable resources in a chapter in a list
     # getResPath()
 
+    def get(self, type, content):
+        if type == 'courseList':
+            urlBase = self.courseListUrl
+            cur = content
+            username = self.user.user_info['loginUser.loginName']
+            cachePath = './temp/courseList({})({}).json'.format(username, cur)
+            return self.getData(cachePath, urlBase, [cur])
+            # if os.path.exists(cachePath):
+            #     return self.load_json_from_file(cachePath)
+            # else:
+            #     data = self.session.get(urlBase.format(cur)).json()
+            #     self.save_json_to_file(cachePath, data)
+            #     return data
+
+        elif type == 'chapterList':
+            urlBase = self.chapterListUrl
+            courseId = content
+            cachePath = './temp/chapterList({}).json'.format(courseId)
+            return self.getData(cachePath, urlBase, [courseId])
+            # if os.path.exists(cachePath):
+            #     return self.load_json_from_file(cachePath)
+            # else:
+            #     data = self.session.get(urlBase.format(courseId)).json()
+            #     self.save_json_to_file(cachePath, data)
+            #     return data
+
+        elif type == 'resourceList':
+            urlBase = self.resourceListUrl
+            courseId = content[0]
+            chapterId = content[1]
+            cur = content[2]
+            cachePath = './temp/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
+            return self.getData(cachePath, urlBase, [courseId, chapterId, cur])
+            # if os.path.exists(cachePath):
+            #     return self.load_json_from_file(cachePath)
+            # else:
+            #     data = self.session.get(urlBase.format(courseId, chapterId, cur)).json()
+            #     self.save_json_to_file(cachePath, data)
+            #     return data
+        else:
+            raise IndexError('Wrong! TODO')
+
+    def getData(self, cachePath: str, urlBase: str, urlArgs: list):
+        if cachePath in self.cache:
+            return self.cache[cachePath]
+        elif os.path.exists(cachePath):
+            data = self.load_json_from_file(cachePath)
+            self.cache[cachePath] = data
+            return data
+        else:
+            data = self.session.get(urlBase.format(*urlArgs)).json()
+            self.cache[cachePath] = data
+            self.save_json_to_file(cachePath, data)
+            return data
+
     def getCourseList(self):
-        course_list = self.session.get(self.course_list_url).json()
-        username = user.user_info['loginUser.loginName']
-        self.save_json_to_file('{}course_list({}).json'.format(self.path, username), course_list)
+        cur = 1
+        courseList = []
+        courseListPage = self.get('courseList', str(cur))
+        for course in courseListPage[0]['myMobileCourseList']:
+            courseList.append(course)
+        while courseListPage[0]['page']['pageCount'] > cur:
+            cur += 1
+            courseListPage = self.get('courseList', str(cur))
+            for course in courseListPage[0]['myMobileCourseList']:
+                courseList.append(course)
+        return courseList
         
+    def getChapterList(self, courseId):
+        chapterList = self.get('chapterList', courseId)
+        return chapterList
+
+    def getResourceList(self, courseId, chapterId):
+        cur = 1
+        resourceList = []
+        resourceListPage = self.get('resourceList', [courseId, chapterId, cur])
+        for resource in resourceListPage[0]['myMobileResourceList']:
+            resourceList.append(resource)
+        while resourceListPage[0]['page']['pageCount'] > cur:
+            cur += 1
+            resourceListPage = self.get('resourceList', str(cur))
+            for resource in resourceListPage[0]['myMobileResourceList']:
+                resourceList.append(resource)
+        return resourceList
+
+    def getCourse(self, courseId):
+        courseList = self.getCourseList()
+        for course in courseList:
+            if course['courseInfoId'] == courseId:
+                return course
+    def getChapter(self, courseId, chapterId):
+        chapterList = self.getChapterList(courseId)
+        for chapter in chapterList:
+            if chapter['id'] == chapterId:
+                return chapter
+
+    def getResource(self, courseId, chapterId, resourceId):
+        resourceList = self.getResourceList(courseId, chapterId)
+        for resource in resourceList:
+            if resource['resourceInfoId'] == resourceId:
+                return resource
+
+    def getChildChapterList(self, chapterList, rootChapter):
+        childChapter = []
+        for chapter in chapterList:
+            if chapter['pId'] == rootChapter['id']:
+                childChapter.append(chapter)
+        return childChapter
+
+    def getResourcePath(self, courseId, chapterId, resourceId):
+        courseName = self.getCourse(courseId)['courseTitle']
+        chapter = self.getChapter(courseId, chapterId)
+        chapterPid = chapter['pId']
+        chapterName = chapter['name']
+        resource = self.getResource(courseId, chapterId, resourceId)
+        resourceName = resource['resTitle']
+        resourceUrl = resource['resFileUrl']
+        resourceType = resourceUrl[resourceUrl.find('.'):]
+        # print(chapterPid)
+        # print(type(chapterPid))
+        while chapterPid != 0:
+            chapter = self.getChapter(courseId, chapterPid)
+            chapterName = chapter['name'] + '/' + chapterName
+            chapterPid = chapter['pId']
+        downloadPath = self.settings['download_path']
+        dirPath = downloadPath + courseName + '/' + chapterName + '/'
+        filePath = dirPath + resourceName + resourceType
+        return (dirPath, filePath, resourceName)
+        # print(courseName)
+        # print(chapterName)
+        # print(resourceName)
+        # print(resourceType)
+
+
     def refresh_course_list(self):
         self.get_courses_info()
         
@@ -53,8 +186,8 @@ class ABook(object):
 
     def get_courses_info(self):
 
-        course_list_url = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur=1"
-        self.course_list = self.session.get(course_list_url).json()
+        courseListUrl = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur=1"
+        self.course_list = self.session.get(courseListUrl).json()
 
         try:
             self.course_list = self.course_list[0]['myMobileCourseList']
@@ -120,11 +253,28 @@ class ABook(object):
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
+    def load_json_from_file(self, path):
+        with open(path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    
 if __name__ == "__main__":
     settings = Settings('./temp/settings.json')
     app = QApplication()
     user = UserLoginDialog()
+    user.exec_()
     if user.login_status == False:
         exit(0)
     abook = ABook('./temp/', settings, user)
-    abook.getCourseList()
+    # courseList = abook.getCourseList()
+    # print(len(courseList))
+    # print(courseList[0])
+
+    # chapterList = abook.getChapterList(5000003293)
+
+    # resourceList = abook.getResourceList(5000003293, 5000343805)
+    # print(resourceList)
+
+    # abook.getResourcePath(5000003293, 5000343805, 5000295100)
+
+
+

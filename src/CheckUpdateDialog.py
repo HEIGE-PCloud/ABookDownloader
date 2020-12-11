@@ -11,12 +11,18 @@ class CheckUpdateWorker(QThread):
         self.parent = parent
 
     def run(self):
-        data = requests.get(self.api).json()
-        version = data['tag_name']
-        description = data['body']
-        url = data['assets'][0]['browser_download_url']
-        self.parent.checkUpdatePushButton.setDisabled(False)
-        self.parent.signal.versionInformationSignal.emit(description)
+        try:
+            proxies = {'http': 'http://127.0.0.1:7890', 'https': 'http://127.0.0.1:7890'}
+            data = requests.get(self.api, proxies=proxies).json()
+        except:
+            self.parent.checkUpdatePushButton.setDisabled(False)
+            self.parent.signal.versionInformationSignal.emit('Failed!')
+        else:
+            version = data['tag_name']
+            description = data['body']
+            url = data['assets'][0]['browser_download_url']
+            self.parent.checkUpdatePushButton.setDisabled(False)
+            self.parent.signal.versionInformationSignal.emit(description)
 
 class CheckUpdateSignals(QObject):
     versionInformationSignal = Signal(str)
