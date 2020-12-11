@@ -83,7 +83,7 @@ if __name__ == "__main__":
     user = UserLoginDialog()
     if settings['debug'] == False:
         user.exec_()
-        if user.login_status == False:
+        if user.loginStatus == False:
             exit(0)
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()

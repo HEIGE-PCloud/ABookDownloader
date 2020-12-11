@@ -1,13 +1,44 @@
 import os
 import json
 import logging
-from PySide2.QtWidgets import QApplication
+import requests
 
-from UserLoginDialog import UserLoginDialog
 from Settings import Settings
 
+class ABookLogin(object):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.loginStatus = False
+        self.userInfo = {'loginUser.loginName': '', 'loginUser.loginPassword': ''}
+        self.path = './temp/user_info.json'
+        self.session = requests.session()
+        self.loginUrl = "http://abook.hep.com.cn/loginMobile.action"
+        self.loginStatusUrl = "http://abook.hep.com.cn/verifyLoginMobile.action"
+        self.headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.64"}
+
+        self.readUserInfoFromFile()
+    
+    def readUserInfoFromFile(self):
+        try:
+            with open(self.path, 'r', encoding='utf-8') as file:
+                self.userInfo = json.load(file)
+                self.username = self.userInfo['loginUser.loginName']
+                self.password = self.userInfo['loginUser.loginPassword']
+        except:
+            pass
+        
+    def saveUserInfoToFile(self) -> None:
+        with open(self.path, 'w', encoding='utf-8') as file:
+            json.dump(self.userInfo, file, ensure_ascii=False, indent=4)
+
+    def login(self):
+        response = self.session.post(self.loginUrl, self.userInfo, headers=self.headers)
+        print(response.json()[0]['message'])
+        self.loginStatus = (response.json()[0]['message'] == 'successful')
+
 class ABookCore(object):
-    def __init__(self, path: str, settings: Settings, user: UserLoginDialog):
+    def __init__(self, path: str, settings: Settings, user):
         super().__init__()
         self.settings = settings
         self.session = user.session
@@ -73,7 +104,7 @@ class ABookCore(object):
         if type == 'courseList':
             urlBase = self.courseListUrl
             cur = argv
-            username = self.user.user_info['loginUser.loginName']
+            username = self.user.userInfo['loginUser.loginName']
             cachePath = './temp/jsonCache/courseList({})({}).json'.format(username, cur)
             return self.getData(cachePath, urlBase, [cur])
 
@@ -207,7 +238,7 @@ class ABookCore(object):
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)
 
-    def validateFileName(name: str):
+    def validateFileName(self, name: str):
         name.strip()
         keywords = ['/', ':', '*', '?', '"', '<', '>', '|']
         originalName = name
@@ -219,11 +250,8 @@ class ABookCore(object):
 
 if __name__ == "__main__":
     settings = Settings('./temp/settings.json')
-    app = QApplication()
-    user = UserLoginDialog()
-    user.exec_()
-    if user.login_status == False:
-        exit(0)
+    user = ABookLogin()
+    user.login()
     abook = ABookCore('./temp/', settings, user)
 
     # Simple tests
