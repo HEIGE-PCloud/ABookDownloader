@@ -67,7 +67,7 @@ class CourseTreeWidget(QWidget, ABookCore):
                 chapterItem = self.createCourseTreeItem(chapterName, courseId, chapterId, hasChild)
                 parentItem.addChild(chapterItem)
                 if hasChild:
-                    self.createTree(chapterItem, 'course', childChapterList, chapterList, courseId)
+                    self.createTree(chapterItem, 'chapter', childChapterList, chapterList, courseId)
         else:
             raise KeyError('Wrong TODO')
 
