@@ -181,16 +181,18 @@ class ABookCore(object):
         of the file, the path of the file, the file name) as a tuple
         """
         courseName = self.getCourse(courseId)['courseTitle']
+        courseName = self.validateFileName(courseName)
         chapter = self.getChapter(courseId, chapterId)
         chapterPid = chapter['pId']
         chapterName = chapter['name']
         resource = self.getResource(courseId, chapterId, resourceId)
         resourceName = resource['resTitle']
+        resourceName = self.validateFileName(resourceName)
         resourceUrl = resource['resFileUrl']
         resourceType = resourceUrl[resourceUrl.find('.'):]
         while chapterPid != 0:
             chapter = self.getChapter(courseId, chapterPid)
-            chapterName = chapter['name'] + '/' + chapterName
+            chapterName = self.validateFileName(chapter['name']) + '/' + chapterName
             chapterPid = chapter['pId']
         downloadPath = self.settings['download_path']
         dirPath = downloadPath + courseName + '/' + chapterName + '/'
@@ -204,7 +206,17 @@ class ABookCore(object):
     def loadJsonFromFile(self, path):
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)
-    
+
+    def validateFileName(name: str):
+        name.strip()
+        keywords = ['/', ':', '*', '?', '"', '<', '>', '|']
+        originalName = name
+        for word in keywords:
+            name = name.replace(word, '')
+        if name != originalName:
+            name = name + "(Renamed)"
+        return name
+
 if __name__ == "__main__":
     settings = Settings('./temp/settings.json')
     app = QApplication()
