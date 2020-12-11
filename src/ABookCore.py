@@ -129,7 +129,7 @@ class ABookCore(object):
                 resourceList.append(resource)
         while resourceListPage[0]['page']['pageCount'] > cur:
             cur += 1
-            resourceListPage = self.get('resourceList', str(cur))
+            resourceListPage = self.get('resourceList', [courseId, chapterId, cur])
             for resource in resourceListPage[0]['myMobileResourceList']:
                 resourceList.append(resource)
         return resourceList
