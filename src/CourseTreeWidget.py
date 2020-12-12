@@ -166,9 +166,14 @@ class LoadPicWorker(QThread):
             # Read the url of the picture and the name of the pic
             picUrl = resourceItem.data(-2)
             picName = picUrl[picUrl.rfind('/') + 1:]
-            pic = self.parent.get('pic', [picUrl, picName])
-            resPic = QImage()
-            resPic.loadFromData(pic)
+            cachePath = './temp/QImageCache/{}'.format(picName)
+            if cachePath in self.parent.cache:
+                resPic = self.parent.cache[cachePath]
+            else:
+                pic = self.parent.get('pic', [picUrl, picName])
+                resPic = QImage()
+                resPic.loadFromData(pic)
+                self.parent.cache[cachePath] = resPic
             resourceItem.setData(resPic, Qt.DecorationRole)
 
 class RefreshCourseListWorker(QThread):
