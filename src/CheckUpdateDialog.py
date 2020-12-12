@@ -13,20 +13,23 @@ class CheckUpdateWorker(QThread):
         self.parent = parent
 
     def run(self):
-        data = requests.get(self.api).json()
-        self.parent.checkUpdatePushButton.setDisabled(False)
-        self.parent.signal.versionInformationSignal.emit('Failed!')
-        version = data['tag_name']
-        if version != self.parent.current_version:
-            description = data['body']
-            url = data['assets'][0]['browser_download_url']
+        try:
+            data = requests.get(self.api).json()
+        except:
             self.parent.checkUpdatePushButton.setDisabled(False)
-            self.parent.signal.versionInformationSignal.emit(description)
-            self.parent.signal.versionLabelSignal.emit(version)
-            self.parent.signal.downloadUrlSignal.emit(url)
+            self.parent.signal.versionInformationSignal.emit('Failed!')
         else:
-            self.parent.signal.versionInformationSignal.emit('No new version detected.')
-            self.parent.signal.versionLabelSignal.emit(version)
+            version = data['tag_name']
+            if version != self.parent.current_version:
+                description = data['body']
+                url = data['assets'][0]['browser_download_url']
+                self.parent.checkUpdatePushButton.setDisabled(False)
+                self.parent.signal.versionInformationSignal.emit(description)
+                self.parent.signal.versionLabelSignal.emit(version)
+                self.parent.signal.downloadUrlSignal.emit(url)
+            else:
+                self.parent.signal.versionInformationSignal.emit('No new version detected.')
+                self.parent.signal.versionLabelSignal.emit(version)
 
 class CheckUpdateSignals(QObject):
     versionInformationSignal = Signal(str)

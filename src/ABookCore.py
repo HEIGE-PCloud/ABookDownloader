@@ -171,7 +171,7 @@ class ABookCore(object):
         """
         courseList = self.getCourseList()
         for course in courseList:
-            if course['courseInfoId'] == courseId:
+            if course['courseInfoId'] == int(courseId):
                 return course
                 
     def getChapter(self, courseId, chapterId):
@@ -180,7 +180,7 @@ class ABookCore(object):
         """
         chapterList = self.getChapterList(courseId)
         for chapter in chapterList:
-            if chapter['id'] == chapterId:
+            if chapter['id'] == int(chapterId):
                 return chapter
 
     def getResource(self, courseId, chapterId, resourceId):
@@ -190,7 +190,7 @@ class ABookCore(object):
         """
         resourceList = self.getResourceList(courseId, chapterId)
         for resource in resourceList:
-            if resource['resourceInfoId'] == resourceId:
+            if resource['resourceInfoId'] == int(resourceId):
                 return resource
 
     def getChildChapterList(self, chapterList, rootChapter):
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     user.login()
     abook = ABookCore('./temp/', settings, user)
 
-    # Simple tests
+      # Simple tests
     courseList = abook.getCourseList()
     # Excepted 3
     print(len(courseList))
