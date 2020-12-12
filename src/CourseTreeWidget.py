@@ -100,9 +100,8 @@ class CourseTreeWidget(QWidget, ABookCore):
                 downloadList = self.getResourceList(courseId, chapterId)
                 if downloadList != None:
                     for resource in downloadList:
-                        fileDir, filePath, fileName = self.getResourcePath(courseId, chapterId, resource["resourceInfoId"])
-                        if os.path.exists(fileDir) == False:
-                            os.mkdir(fileDir)
+                        fileDir, filePath, fileName, coursePath = self.getResourcePath(courseId, chapterId, resource["resourceInfoId"])
+                        os.makedirs(fileDir, exist_ok=True)
                         self.signal.addDownloadTask.emit(fileName, filePath, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
 
     def refresh_course_list_tree(self):

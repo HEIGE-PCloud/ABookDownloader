@@ -240,7 +240,8 @@ class ABookCore(object):
         downloadPath = self.settings['download_path']
         dirPath = downloadPath + courseName + '/' + chapterName + '/'
         filePath = dirPath + resourceName + resourceType
-        return (dirPath, filePath, resourceName)
+        coursePath = downloadPath + courseName
+        return (dirPath, filePath, resourceName, coursePath)
 
     def saveJsonToFile(self, path, data):
         with open(path, 'w', encoding='utf-8') as file:

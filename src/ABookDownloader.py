@@ -73,8 +73,7 @@ class ABookDownloaderMainWindow(QMainWindow):
 def init():
     dirList = ['./Downloads', './temp', './temp/jsonCache', './temp/picCache']
     for dir in dirList:
-        if os.path.exists(dir) == False:
-            os.mkdir(dir)
+        os.makedirs(dir, exist_ok=True)
             
 if __name__ == "__main__":
     app = QApplication(sys.argv)
