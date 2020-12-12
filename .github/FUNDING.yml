@@ -1,0 +1,12 @@
+# These are supported funding model platforms
+
+github: # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
+patreon: # Replace with a single Patreon username
+open_collective: # Replace with a single Open Collective username
+ko_fi: # Replace with a single Ko-fi username
+tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
+community_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry
+liberapay: # Replace with a single Liberapay username
+issuehunt: # Replace with a single IssueHunt username
+otechie: # Replace with a single Otechie username
+custom: ['https://camo.githubusercontent.com/01c250fb1e2a1c8e4e7a092789395be73d43641a8ad12b3f3b6e654f9caef1fe/68747470733a2f2f656431746f612e626e2e66696c65732e316472762e636f6d2f79346d76787a507843645a414d7078685a4169366768496b524b686a334f596c36425233373731344b73427669723835757a66435944506b7a6a6b42496a69526971434a6b4943396477356d7947324f71627163395549676b724f5474336d594163734768724f326e42676b6341334979506c6b694b725f44754642596165612d747164426876646a386c30437a566b73524a4e51524c77615775732d4e554848575a50585942745a49787455646f474841646a5933593675455a673863353231686c303153335a624f626e48314657586732383851796a673f77696474683d333536266865696768743d3335362663726f706d6f64653d6e6f6e65']
