@@ -159,23 +159,14 @@ class LoadPicWorker(QThread):
         super(LoadPicWorker, self).__init__(parent)
         self.resourceItemList = resourceItemList
         self.urlBase = "http://abook.hep.com.cn/ICourseFiles/"
+        self.parent = parent
 
     def run(self) -> None:
         for resourceItem in self.resourceItemList:
             # Read the url of the picture and the name of the pic
             picUrl = resourceItem.data(-2)
             picName = picUrl[picUrl.rfind('/') + 1:]
-            # Check if it has been cached before
-            if os.path.exists('./temp/picCache/{}'.format(picName)):
-                with open('./temp/picCache/{}'.format(picName), 'rb') as file:
-                    pic = file.read()
-            else:
-                # Get and save the picture
-                resPicUrl = self.urlBase + picUrl
-                pic = requests.get(resPicUrl).content
-                with open('./temp/picCache/{}'.format(picName), 'wb') as file:
-                    file.write(pic)
-            # Set the image for Qt.DecorationRole
+            pic = self.parent.get('pic', [picUrl, picName])
             resPic = QImage()
             resPic.loadFromData(pic)
             resourceItem.setData(resPic, Qt.DecorationRole)
@@ -189,18 +180,16 @@ class RefreshCourseListWorker(QThread):
     def run(self):
         courseList = self.parent.getCourseList()
         for i in range(len(courseList)):
-            # self.parent.pd.setMaximum_1(len(courseList))
-            # self.parent.pd.setValue_1(i + 1)
-
+            print("Updating #{} course with total {}".format(i + 1, len(courseList)))
             courseId = courseList[i]['courseInfoId']
             chapterList = self.parent.getChapterList(courseId)
             for j in range(len(chapterList)):
-                # self.parent.pd.setMaximum_2(len(chapterList))
-                # self.parent.pd.setValue_2(j + 1)
-
+                print("Update #{} chapter with total {}".format(j + 1, len(chapterList)))
                 chapterId = chapterList[j]['id']
-                self.parent.getResourceList(courseId, chapterId)
+                try:
+                    self.parent.getResourceList(courseId, chapterId)
+                except:
+                    pass
 
-        self.parent.pd.close()
         # self.parent.TreeWidget.clear()
         self.parent.setDisabled(False)

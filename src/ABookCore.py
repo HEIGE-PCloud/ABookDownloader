@@ -48,6 +48,7 @@ class ABookCore(object):
         self.courseListUrl = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur={}"
         self.chapterListUrl = "http://abook.hep.com.cn/resourceStructure.action?courseInfoId={}"
         self.resourceListUrl = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}"
+        self.fileUrl = "http://abook.hep.com.cn/ICourseFiles/{}"
 
     def getData(self, cachePath: str, urlBase: str, urlArgs: list):
         """
@@ -73,16 +74,21 @@ class ABookCore(object):
                 self.cache[cachePath] = data
                 return data
             except:
-                pass
+                with open(cachePath, 'rb') as file:
+                    data = file.read()
+                return data
 
         # If nothing is working correctly, use the web api
-        data = self.session.get(urlBase.format(*urlArgs)).json()
-        self.cache[cachePath] = data
+        data = self.session.get(urlBase.format(*urlArgs))
         try:
-            self.saveJsonToFile(cachePath, data)
+            jsonData = data.json()
+            self.saveJsonToFile(cachePath, jsonData)
+            self.cache[cachePath] = jsonData
         except:
-            pass
-
+            data = data.content
+            with open(cachePath, 'wb') as file:
+                file.write(data)
+            self.cache[cachePath] = data
         return data
 
     def get(self, type, argv):
@@ -122,6 +128,12 @@ class ABookCore(object):
             cachePath = './temp/jsonCache/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
             return self.getData(cachePath, urlBase, [courseId, chapterId, cur])
 
+        elif type == 'pic':
+            urlBase = self.fileUrl
+            picUrl = argv[0]
+            picName = argv[1]
+            cachePath = './temp/picCache/{}'.format(picName)
+            return self.getData(cachePath, urlBase, [picUrl])
         else:
             raise IndexError("Wrong Index! Only 'courseList', 'chapterList', 'resourceList' are accepted.")
 

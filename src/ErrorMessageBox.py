@@ -24,8 +24,8 @@ class ErrorMessageBox(QWidget):
         with open('./temp/error.log', 'a', encoding='utf-8') as file:
             file.write(message)
         self.error += message
-        self.messageBox.setDetailedText(self.error)
-        self.messageBox.show()
+        # self.messageBox.setDetailedText(self.error)
+        # self.messageBox.show()
 
     def copy(self):
         pyperclip.copy(self.errorInformationBox.toPlainText())
