@@ -167,6 +167,8 @@ class ABookCore(object):
         cur = 1
         resourceList = []
         resourceListPage = self.get('resourceList', [courseId, chapterId, cur])
+        if type(resourceListPage) != list:
+            return None        
         if 'myMobileResourceList' in resourceListPage[0]:
             for resource in resourceListPage[0]['myMobileResourceList']:
                 resourceList.append(resource)

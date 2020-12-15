@@ -8,7 +8,7 @@ import logging
 import requests
 
 class FileDownloaderSignals(QObject):
-    startDownload = Signal(bool)
+    startDownload = Signal()
     cancelDownload = Signal(int)
     downloadSpeed = Signal(int, str)
     downloadStatus = Signal(int, str)
@@ -19,11 +19,6 @@ class FileDownloaderWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.id = 1
-        self.signals = FileDownloaderSignals()
-        self.tableWidget = QTableWidget()       
-        self.startDownloadButton = QPushButton('Start Download')
-        self.clearListButton = QPushButton('Clear Download List')
-        self.hideFinishedCheckBox = QCheckBox('Hide Finished')
         self.TASKID = 0
         self.FILENAME = 1
         self.PROGRESSBAR = 2
@@ -34,6 +29,11 @@ class FileDownloaderWidget(QWidget):
         self.CANCEL = 7
         self.RETRY = 8
         self.DELETE = 9
+        self.signals = FileDownloaderSignals()
+        self.tableWidget = QTableWidget()       
+        self.startDownloadButton = QPushButton('Start Download')
+        self.clearListButton = QPushButton('Clear Download List')
+        self.hideFinishedCheckBox = QCheckBox('Hide Finished')
         self.startDownloadButton.clicked.connect(self.startDownload)
         self.clearListButton.clicked.connect(self.clearDownloadList)
         self.hideFinishedCheckBox.clicked.connect(self.hideFinished)
@@ -143,9 +143,9 @@ class FileDownloaderWidget(QWidget):
         row = self.rowOfValue('Pending', self.STATUS)
         if (len(row) > 0):
             row = row[0]
-            self.startTask(int(self.tableWidget.item(row, self.TASKID).text()))
+            self.startTask(int(self.tableWidget.item(row, self.TASKID).text()), True)
 
-    def startTask(self, taskId: int):
+    def startTask(self, taskId: int, downloadNext: bool):
         """
         startTask(taskId: int) starts a DownloadWorker and starts the task
         with taskId. It will not check if the task has started before
@@ -156,7 +156,7 @@ class FileDownloaderWidget(QWidget):
             row = row[0]
             filePath = self.tableWidget.item(row, self.FILEPATH).text()
             url = self.tableWidget.item(row, self.URL).text()
-            worker = DownloadWorker(taskId, filePath, url, self)
+            worker = DownloadWorker(taskId, filePath, url, downloadNext, self)
             worker.start()
 
     def cancelTask(self):
@@ -170,7 +170,7 @@ class FileDownloaderWidget(QWidget):
         taskId = int(self.tableWidget.item(row, self.TASKID).text())
         self.signals.cancelDownload.emit(taskId)
         self.tableWidget.item(row, self.STATUS).setText('Pending')
-        self.startTask(taskId)
+        self.startTask(taskId, False)
 
     def deleteTask(self):
         row = self.rowOfWidget(self.sender(), self.DELETE)
@@ -235,18 +235,20 @@ class FileDownloaderWidget(QWidget):
 
 class DownloadWorker(QThread):
 
-    def __init__(self, taskId, filePath, url, parent=None):
+    def __init__(self, taskId, filePath, url, downloadNext=True, parent=None):
         QThread.__init__(self, parent)
         
         self.taskId = taskId
         self.filePath = filePath
         self.dirPath = os.path.dirname(self.filePath)
+        self.downloadNext = downloadNext
         self.parent = parent
         self.url = url
         self.signals = FileDownloaderSignals()
         self.signals.progressBarValue.connect(parent.updateProgressBar)
         self.signals.downloadStatus.connect(parent.updateDownloadStatus)
         self.signals.downloadSpeed.connect(parent.updateDownloadSpeed)
+        self.signals.startDownload.connect(parent.startDownload)
         parent.signals.cancelDownload.connect(self.cancelDownload)
         self.cancel = False
 
@@ -269,7 +271,6 @@ class DownloadWorker(QThread):
             for chunk in request.iter_content(chunk_size=512):
                 if self.cancel:
                     self.signals.progressBarValue.emit(self.taskId, 0)
-                    self.disconnectSignals()
                     return
                 if chunk:
                     file.write(chunk)
@@ -283,15 +284,9 @@ class DownloadWorker(QThread):
                         timeStart = time.time()
         self.signals.progressBarValue.emit(self.taskId, 100)
         self.signals.downloadStatus.emit(self.taskId, 'Finished')
-        self.disconnectSignals()
+        if self.downloadNext:
+            self.signals.startDownload.emit()
         self.exit(0)
-
-    def disconnectSignals(self):
-        return
-        self.signals.progressBarValue.disconnect(self.parent.updateProgressBar)
-        self.signals.downloadStatus.disconnect(self.parent.updateDownloadStatus)
-        self.signals.downloadSpeed.disconnect(self.parent.updateDownloadSpeed)
-        self.parent.signals.cancelDownload.disconnect(self.cancelDownload)
 
 if __name__ == '__main__': 
     logging.basicConfig(level=logging.DEBUG)
