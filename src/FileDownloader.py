@@ -116,8 +116,8 @@ class FileDownloaderWidget(QWidget):
     
     def clearDownloadList(self):
         self.createTable()
-        self.task_list.clear()
         self.signals.cancel_download.emit(-1)
+        self.task_list.clear()
 
     def hideFinished(self):
         if self.hideFinishedCheckBox.isChecked():
