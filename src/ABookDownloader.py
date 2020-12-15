@@ -5,7 +5,7 @@ from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
 from ErrorMessageBox import ErrorMessageBox
-from FileDownloader import FileDownloaderWidget
+from FileDownloaderWidget import FileDownloaderWidget
 from FileListWidget import FileListWidget
 from Settings import Settings
 from UserLoginDialog import UserLoginDialog
