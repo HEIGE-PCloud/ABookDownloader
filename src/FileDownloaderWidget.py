@@ -43,6 +43,7 @@ class FileDownloaderWidget(QWidget):
         layout.addWidget(self.hideFinishedCheckBox, 1, 0, 1, 1)
         layout.addWidget(self.startDownloadButton, 2, 0, 1, 1)
         layout.addWidget(self.clearListButton, 2, 1, 1, 1)
+        layout.setMargin(0)
         self.setLayout(layout)
         self.resize(1920, 1080)
 
