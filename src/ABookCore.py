@@ -50,9 +50,9 @@ class ABookCore(object):
         self.resourceListUrl = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}"
         self.fileUrl = "http://abook.hep.com.cn/ICourseFiles/{}"
 
-    def getData(self, cachePath: str, urlBase: str, urlArgs: list):
+    def getData(self, cachePath: str, urlBase: str, urlArgs: list, forceRefresh=False):
         """
-        GetData() takes three inputs: cachePath, urlBase and urlArgs.
+        getData() takes three inputs: cachePath, urlBase, urlArgs and forceRefresh.
         getData() will first try to get data from variable self.cache,
         self.cache is a dict type variable, and the cachePath acts as the key.
         If the data is not cached in the memory, getData() will then try to
@@ -60,23 +60,26 @@ class ABookCore(object):
         If there is no local cache, getData() will visit the url you pass.
         It will generate the url by url = urlbase.format(*urlArgs) so you can
         pass some Args into it.
+        If forceRefresh is True, then getData() will fetch from web api directly.
         """
         
-        # Check the memory cache first
-        if cachePath in self.cache:
-            return self.cache[cachePath]
-        
-        # If not in memory cache, then check the local file 
-        if os.path.exists(cachePath):
-            # If the local json file is broken, then fallback to web api
-            try:
-                data = self.loadJsonFromFile(cachePath)
-                self.cache[cachePath] = data
-                return data
-            except:
-                with open(cachePath, 'rb') as file:
-                    data = file.read()
-                return data
+        if forceRefresh == False:
+
+            # Check the memory cache first
+            if cachePath in self.cache:
+                return self.cache[cachePath]
+            
+            # If not in memory cache, then check the local file 
+            if os.path.exists(cachePath):
+                # If the local json file is broken, then fallback to web api
+                try:
+                    data = self.loadJsonFromFile(cachePath)
+                    self.cache[cachePath] = data
+                    return data
+                except:
+                    with open(cachePath, 'rb') as file:
+                        data = file.read()
+                    return data
 
         # If nothing is working correctly, use the web api
         data = self.session.get(urlBase.format(*urlArgs))
@@ -91,7 +94,7 @@ class ABookCore(object):
             self.cache[cachePath] = data
         return data
 
-    def get(self, type, argv):
+    def get(self, type, argv, forceRefresh=False):
         """
         get() function returns courseList/chapterList/resourceList.
         The 'type' is an str used to identify the type of data.
@@ -112,13 +115,13 @@ class ABookCore(object):
             cur = argv
             username = self.user.userInfo['loginUser.loginName']
             cachePath = './temp/jsonCache/courseList({})({}).json'.format(username, cur)
-            return self.getData(cachePath, urlBase, [cur])
+            return self.getData(cachePath, urlBase, [cur], forceRefresh)
 
         elif type == 'chapterList':
             urlBase = self.chapterListUrl
             courseId = argv
             cachePath = './temp/jsonCache/chapterList({}).json'.format(courseId)
-            return self.getData(cachePath, urlBase, [courseId])
+            return self.getData(cachePath, urlBase, [courseId], forceRefresh)
 
         elif type == 'resourceList':
             urlBase = self.resourceListUrl
@@ -126,14 +129,14 @@ class ABookCore(object):
             chapterId = argv[1]
             cur = argv[2]
             cachePath = './temp/jsonCache/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
-            return self.getData(cachePath, urlBase, [courseId, chapterId, cur])
+            return self.getData(cachePath, urlBase, [courseId, chapterId, cur], forceRefresh)
 
         elif type == 'pic':
             urlBase = self.fileUrl
             picUrl = argv[0]
             picName = argv[1]
             cachePath = './temp/picCache/{}'.format(picName)
-            return self.getData(cachePath, urlBase, [picUrl])
+            return self.getData(cachePath, urlBase, [picUrl], forceRefresh)
         else:
             raise IndexError("Wrong Index! Only 'courseList', 'chapterList', 'resourceList' are accepted.")
 
