@@ -1,6 +1,8 @@
 import os
 import sys
-from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMenu, QWidget
+from PySide2.QtCore import Qt
+from PySide2.QtGui import QGuiApplication
+from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, QMenu, QSplitter, QWidget
 from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
@@ -15,16 +17,31 @@ class ABookDownloaderMainWindow(QMainWindow):
     def __init__(self, path, settings, session):
         QMainWindow.__init__(self)
         self.course_tree_widget = CourseTreeWidget(path, settings, session)
-        self. file_list_widget = FileListWidget()
+        self.file_list_widget = FileListWidget()
         self.download_dir_tree_widget = DownloadDirTreeWidget(settings['download_path'])
         self.file_downloader = FileDownloaderWidget()
+        vSplitter = QSplitter(Qt.Vertical)
+        hSplitter1 = QSplitter(Qt.Horizontal)
+        hSplitter2 = QSplitter(Qt.Horizontal)
+        hSplitter1.addWidget(self.course_tree_widget)
+        hSplitter1.addWidget(self.file_list_widget)
+        hSplitter2.addWidget(self.download_dir_tree_widget)
+        hSplitter2.addWidget(self.file_downloader)
+        vSplitter.addWidget(hSplitter1)
+        vSplitter.addWidget(hSplitter2)
+        maxWidth = QGuiApplication.primaryScreen().size().width()
+        maxHeight = QGuiApplication.primaryScreen().size().height()
+        hSplitter1.setSizes([maxWidth, maxWidth])
+        hSplitter2.setSizes([maxWidth, maxWidth])
+        vSplitter.setSizes([maxHeight, maxHeight])
         mainWidget = QWidget(self)
         mainLayout = QGridLayout()
         mainWidget.setLayout(mainLayout)
-        mainLayout.addWidget(self.course_tree_widget, 0, 0)
-        mainLayout.addWidget(self.file_list_widget, 0, 1)
-        mainLayout.addWidget(self.download_dir_tree_widget, 1, 0)
-        mainLayout.addWidget(self.file_downloader, 1, 1)
+        mainLayout.addWidget(vSplitter)
+        # mainLayout.addWidget(self.course_tree_widget, 0, 0)
+        # mainLayout.addWidget(self.file_list_widget, 0, 1)
+        # mainLayout.addWidget(self.download_dir_tree_widget, 1, 0)
+        # mainLayout.addWidget(self.file_downloader, 1, 1)
         self.course_tree_widget.signal.clearFileListWidget.connect(self.file_list_widget.clear)
         self.course_tree_widget.signal.appendRowFileListWidget.connect(self.file_list_widget.appendRow)
         self.course_tree_widget.signal.addDownloadTask.connect(self.file_downloader.addDownloadTask)
