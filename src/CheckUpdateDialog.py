@@ -2,7 +2,7 @@ import sys
 import requests
 import pyperclip
 from PySide2.QtGui import QDesktopServices
-from PySide2.QtCore import QObject, QThread, Signal
+from PySide2.QtCore import QObject, QThread, Qt, Signal
 from PySide2.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QPushButton, QTextEdit
 
 class CheckUpdateWorker(QThread):
@@ -68,6 +68,7 @@ class CheckUpdateDialog(QDialog):
         self.signal.downloadUrlSignal.connect(self.updateDownloadUrl)
         self.setLayout(layout)
         self.setWindowTitle('Check Update')
+        self.setWindowFlag(Qt.WindowMinMaxButtonsHint)
         self.checkUpdatePushButton.click()
 
     def getUpdate(self):

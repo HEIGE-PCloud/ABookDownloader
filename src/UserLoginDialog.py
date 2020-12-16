@@ -88,6 +88,7 @@ class UserLoginDialog(QDialog, ABookLogin):
         self.layout.addWidget(self.login_widget)
         self.setLayout(self.layout)
         self.setWindowTitle("ABook Login")
+        self.setWindowFlag(Qt.WindowMinMaxButtonsHint)
 
     def login(self):
         self.userInfo['loginUser.loginName'] = self.login_widget.usernameLineEdit.text()
@@ -115,3 +116,4 @@ class UserLoginDialog(QDialog, ABookLogin):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login = UserLoginDialog()
+    login.exec_()
