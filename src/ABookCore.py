@@ -87,12 +87,13 @@ class ABookCore(object):
             jsonData = data.json()
             self.saveJsonToFile(cachePath, jsonData)
             self.cache[cachePath] = jsonData
+            return jsonData
         except:
             data = data.content
             with open(cachePath, 'wb') as file:
                 file.write(data)
             self.cache[cachePath] = data
-        return data
+            return data
 
     def get(self, type, argv, forceRefresh=False):
         """
