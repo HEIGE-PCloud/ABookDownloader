@@ -77,10 +77,12 @@ class LoginWorker(QThread):
 
 class UserLoginDialog(QDialog, ABookLogin):
 
-    def __init__(self) -> None:
+    def __init__(self, settings) -> None:
         QDialog.__init__(self)
         ABookLogin.__init__(self)
         self.initLayout()
+        if settings['auto_login']:
+            self.login_widget.loginButton.click()
     
     def initLayout(self):
         self.login_widget =  LoginWidget(self)
