@@ -92,7 +92,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     init()
     settings = Settings('./temp/settings.json')
-    user = UserLoginDialog()
+    user = UserLoginDialog(settings)
     if settings['debug'] == False:
         user.exec_()
         if user.loginStatus == False:

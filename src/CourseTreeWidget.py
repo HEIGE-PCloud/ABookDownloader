@@ -4,6 +4,7 @@ from PySide2.QtGui import QImage, QStandardItem
 from PySide2.QtCore import QObject, QThread, Qt, Signal
 import requests
 import os
+from ImportCourseWizard import ImportCourseWizard
 
 from ProgressBarDialog import ProgressBarDialog
 
@@ -30,8 +31,8 @@ class CourseTreeWidget(QWidget, ABookCore):
         self.download_button = QPushButton("Download Selected")
         self.download_button.clicked.connect(self.addDownloadTask)
 
-        self.refresh_button = QPushButton("Refresh Course List")
-        self.refresh_button.clicked.connect(self.refresh_course_list_tree)
+        self.refresh_button = QPushButton("Import Courses")
+        self.refresh_button.clicked.connect(self.startImportCourseWidget)
 
         main_layout = QGridLayout()
         main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
@@ -40,15 +41,18 @@ class CourseTreeWidget(QWidget, ABookCore):
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
+        if settings['first_launch'] == True:
+            settings['first_launch'] = False
+            self.refresh_button.click()
+        else:
+            self.createTreeRoot()
+
+    def createTreeRoot(self):
         courseList = self.getCourseList()
         for course in courseList:
             courseId = course['courseInfoId']
             currentChapterList = self.getChapterList(courseId)
             self.createTree(self.TreeWidget, 'course', course, currentChapterList, courseId)
-                    
-        self.TreeWidget.resizeColumnToContents(0)
-        self.TreeWidget.resizeColumnToContents(1)
-        self.TreeWidget.resizeColumnToContents(2)
 
     def createTree(self, parentItem, itemType, itemData, chapterList, courseId):
         if itemType == 'course':
@@ -108,6 +112,10 @@ class CourseTreeWidget(QWidget, ABookCore):
         self.setDisabled(True)
         self.pd.show()
         worker.start()
+
+    def startImportCourseWidget(self):
+        wizard = ImportCourseWizard(self)
+        wizard.show()
 
     def loadResourceList(self):
         # When triggered on click, first adjust the width of the column
@@ -173,26 +181,3 @@ class LoadPicWorker(QThread):
                 resPic.loadFromData(pic)
                 self.parent.cache[cachePath] = resPic
             resourceItem.setData(resPic, Qt.DecorationRole)
-
-class RefreshCourseListWorker(QThread):
-
-    def __init__(self, parent=None):
-        super(RefreshCourseListWorker, self).__init__(parent)
-        self.parent = parent
-    
-    def run(self):
-        courseList = self.parent.getCourseList()
-        for i in range(len(courseList)):
-            print("Updating #{} course with total {}".format(i + 1, len(courseList)))
-            courseId = courseList[i]['courseInfoId']
-            chapterList = self.parent.getChapterList(courseId)
-            for j in range(len(chapterList)):
-                print("Update #{} chapter with total {}".format(j + 1, len(chapterList)))
-                chapterId = chapterList[j]['id']
-                try:
-                    self.parent.getResourceList(courseId, chapterId)
-                except:
-                    pass
-
-        # self.parent.TreeWidget.clear()
-        self.parent.setDisabled(False)
