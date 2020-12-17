@@ -6,7 +6,13 @@ class Settings(object):
 
         self.path = path
         self.settings = {}
-        self.DEFAULT_SETTINGS = {'download_path' : './Downloads/', 'debug': False, 'proxy': None}
+        self.DEFAULT_SETTINGS = {
+            'download_path' : './Downloads/',
+            'debug': False,
+            'proxy': None,
+            'auto_login': False,
+            'first_launch': True
+            }
         
         self.read_settings_from_file()
 
@@ -15,6 +21,7 @@ class Settings(object):
 
     def __setitem__(self, index, value):
         self.settings[index] = value
+        self.save_settings_to_file()
 
     def read_settings_from_file(self):
 
