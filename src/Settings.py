@@ -9,7 +9,7 @@ class Settings(object):
         self.DEFAULT_SETTINGS = {
             'download_path' : './Downloads/',
             'debug': False,
-            'proxy': None,
+            'proxies': None,
             'auto_login': False,
             'first_launch': True
             }

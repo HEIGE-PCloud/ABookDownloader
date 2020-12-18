@@ -28,10 +28,10 @@ class SelectCoursePage(QWizardPage):
 
     def __init__(self, parent=None):
         super(SelectCoursePage, self).__init__(parent)
-        self.setTitle("Select Course")
+        self.setTitle("Course")
         self.courseList = parent.getCourseList()
         self.courseListWidget = QListWidget()
-        self.courseListWidget.setDisabled(True)
+        # self.courseListWidget.setDisabled(True)
         layout = QGridLayout()
         layout.addWidget(self.courseListWidget)
         self.setLayout(layout)
@@ -41,8 +41,8 @@ class SelectCoursePage(QWizardPage):
             courseItem = QListWidgetItem()
             courseItem.setText(course['courseTitle'])
             courseItem.setData(-1, course)
-            courseItem.setFlags(courseItem.flags() | Qt.ItemIsUserCheckable)
-            courseItem.setCheckState(Qt.Checked)
+            # courseItem.setFlags(courseItem.flags() | Qt.ItemIsUserCheckable)
+            # courseItem.setCheckState(Qt.Checked)
             self.courseListWidget.addItem(courseItem)
 
 class ImportPage(QWizardPage):
@@ -95,6 +95,7 @@ class EndPage(QWizardPage):
         self.parent = parent
 
     def initializePage(self) -> None:
+        self.parent.TreeWidget.clear()
         self.parent.createTreeRoot()
 
 class RefreshCourseListSignals(QObject):

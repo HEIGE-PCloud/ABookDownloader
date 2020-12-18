@@ -5,31 +5,35 @@ from PySide2.QtGui import QDesktopServices
 from PySide2.QtCore import QObject, QThread, Qt, Signal
 from PySide2.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QPushButton, QTextEdit
 
+from Settings import Settings
+
 class CheckUpdateWorker(QThread):
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, settings, parent=None) -> None:
         super(CheckUpdateWorker, self).__init__(parent)
         self.api = "https://api.github.com/repos/HEIGE-PCloud/ABookDownloader/releases/latest"
         self.parent = parent
+        self.settings = settings
 
     def run(self):
-        try:
-            data = requests.get(self.api).json()
-        except:
+        proxies = {
+            'http': '127.0.0.1:7890',
+            'https': '127.0.0.1:7890'
+        }
+        data = requests.get(self.api, proxies=self.settings['proxies']).json()
+        self.parent.checkUpdatePushButton.setDisabled(False)
+        self.parent.signal.versionInformationSignal.emit('Failed!')
+        version = data['tag_name']
+        if version != self.parent.current_version:
+            description = data['body']
+            url = data['assets'][0]['browser_download_url']
             self.parent.checkUpdatePushButton.setDisabled(False)
-            self.parent.signal.versionInformationSignal.emit('Failed!')
+            self.parent.signal.versionInformationSignal.emit(description)
+            self.parent.signal.versionLabelSignal.emit(version)
+            self.parent.signal.downloadUrlSignal.emit(url)
         else:
-            version = data['tag_name']
-            if version != self.parent.current_version:
-                description = data['body']
-                url = data['assets'][0]['browser_download_url']
-                self.parent.checkUpdatePushButton.setDisabled(False)
-                self.parent.signal.versionInformationSignal.emit(description)
-                self.parent.signal.versionLabelSignal.emit(version)
-                self.parent.signal.downloadUrlSignal.emit(url)
-            else:
-                self.parent.signal.versionInformationSignal.emit('No new version detected.')
-                self.parent.signal.versionLabelSignal.emit(version)
+            self.parent.signal.versionInformationSignal.emit('No new version detected.')
+            self.parent.signal.versionLabelSignal.emit(version)
 
 class CheckUpdateSignals(QObject):
     versionInformationSignal = Signal(str)
@@ -38,8 +42,9 @@ class CheckUpdateSignals(QObject):
 
 class CheckUpdateDialog(QDialog):
 
-    def __init__(self) -> None:
+    def __init__(self, settings, parent=None) -> None:
         QDialog.__init__(self)
+        self.settings = settings
         self.signal = CheckUpdateSignals()
         self.current_version = 'Dev'
         self.downloadUrl = ''
@@ -73,7 +78,7 @@ class CheckUpdateDialog(QDialog):
 
     def getUpdate(self):
         self.checkUpdatePushButton.setDisabled(True)
-        worker = CheckUpdateWorker(self)
+        worker = CheckUpdateWorker(self.settings, self)
         worker.start()
 
     def setVersionLabel(self, text: str):
@@ -96,6 +101,7 @@ class CheckUpdateDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    update = CheckUpdateDialog()
+    settings = Settings('./temp/settings.json')
+    update = CheckUpdateDialog(settings)
     update.show()
     sys.exit(app.exec_())

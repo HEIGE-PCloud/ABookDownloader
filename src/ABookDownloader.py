@@ -16,6 +16,7 @@ class ABookDownloaderMainWindow(QMainWindow):
 
     def __init__(self, path, settings, session):
         QMainWindow.__init__(self)
+        self.settings = settings
         self.course_tree_widget = CourseTreeWidget(path, settings, session)
         self.file_list_widget = FileListWidget()
         self.download_dir_tree_widget = DownloadDirTreeWidget(settings['download_path'])
@@ -77,7 +78,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         self.menuBar().addMenu(fileMenu)
 
     def checkUpdate(self):
-        checkUpdateDialog = CheckUpdateDialog()
+        checkUpdateDialog = CheckUpdateDialog(self.settings)
         checkUpdateDialog.exec_()
     
     def debug(self):
