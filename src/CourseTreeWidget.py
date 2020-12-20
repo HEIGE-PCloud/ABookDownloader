@@ -1,12 +1,13 @@
-from ABookCore import ABookCore
-from PySide2.QtWidgets import QWidget, QTreeWidget, QPushButton, QGridLayout, QTreeWidgetItem
+import logging
+
+from PySide2.QtCore import QObject, Qt, QThread, Signal
 from PySide2.QtGui import QImage, QStandardItem
-from PySide2.QtCore import QObject, QThread, Qt, Signal
-import requests
-import os
+from PySide2.QtWidgets import (QGridLayout, QPushButton, QTreeWidget,
+                               QTreeWidgetItem, QWidget)
+
+from ABookCore import ABookCore
 from ImportCourseWizard import ImportCourseWizard
 
-from ProgressBarDialog import ProgressBarDialog
 
 class CourseTreeWidgetSignals(QObject):
     clearFileListWidget = Signal()
