@@ -21,24 +21,24 @@ class ABookDownloaderMainWindow(QMainWindow):
         self.file_list_widget = FileListWidget()
         self.download_dir_tree_widget = DownloadDirTreeWidget(settings['download_path'])
         self.file_downloader = FileDownloaderWidget()
-        vSplitter = QSplitter(Qt.Vertical)
-        hSplitter1 = QSplitter(Qt.Horizontal)
-        hSplitter2 = QSplitter(Qt.Horizontal)
-        hSplitter1.addWidget(self.course_tree_widget)
-        hSplitter1.addWidget(self.file_list_widget)
-        hSplitter2.addWidget(self.download_dir_tree_widget)
-        hSplitter2.addWidget(self.file_downloader)
-        vSplitter.addWidget(hSplitter1)
-        vSplitter.addWidget(hSplitter2)
-        maxWidth = QGuiApplication.primaryScreen().size().width()
-        maxHeight = QGuiApplication.primaryScreen().size().height()
-        hSplitter1.setSizes([maxWidth, maxWidth])
-        hSplitter2.setSizes([maxWidth, maxWidth])
-        vSplitter.setSizes([maxHeight, maxHeight])
+        self.vSplitter = QSplitter(Qt.Vertical)
+        self.hSplitter1 = QSplitter(Qt.Horizontal)
+        self.hSplitter2 = QSplitter(Qt.Horizontal)
+        self.hSplitter1.addWidget(self.course_tree_widget)
+        self.hSplitter1.addWidget(self.file_list_widget)
+        self.hSplitter2.addWidget(self.download_dir_tree_widget)
+        self.hSplitter2.addWidget(self.file_downloader)
+        self.vSplitter.addWidget(self.hSplitter1)
+        self.vSplitter.addWidget(self.hSplitter2)
+        self.maxWidth = QGuiApplication.primaryScreen().size().width()
+        self.maxHeight = QGuiApplication.primaryScreen().size().height()
+        self.hSplitter1.setSizes([self.maxWidth, self.maxWidth])
+        self.hSplitter2.setSizes([self.maxWidth, self.maxWidth])
+        self.vSplitter.setSizes([self.maxHeight, self.maxHeight])
         mainWidget = QWidget(self)
         mainLayout = QGridLayout()
         mainWidget.setLayout(mainLayout)
-        mainLayout.addWidget(vSplitter)
+        mainLayout.addWidget(self.vSplitter)
         self.course_tree_widget.signal.clearFileListWidget.connect(self.file_list_widget.clear)
         self.course_tree_widget.signal.appendRowFileListWidget.connect(self.file_list_widget.appendRow)
         self.course_tree_widget.signal.addDownloadTask.connect(self.file_downloader.addDownloadTask)
@@ -57,7 +57,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         
         aboutAction = QAction('About', self)
         aboutAction.setStatusTip('About')
-        
+
         updateAction = QAction('Check Updates', self)
         updateAction.setStatusTip('Check Update')
         updateAction.triggered.connect(self.checkUpdate)
@@ -68,14 +68,60 @@ class ABookDownloaderMainWindow(QMainWindow):
         debugAction = QAction('Debug', self)
         debugAction.triggered.connect(self.debug)
 
+        maximizeCourseWindow = QAction('Maximize Course Window', self) 
+        maximizeCourseWindow.triggered.connect(self.maximizeCourse)
+        maximizeCourseWindow.setShortcut('Alt+D')
+        maximizeResourceWindow = QAction('Maximize Resource Window', self)
+        maximizeResourceWindow.triggered.connect(self.maximizeResource)
+        maximizeResourceWindow.setShortcut('Alt+F')
+        maximizeLocalFilesWindow = QAction('Maximize Local Files Window', self)
+        maximizeLocalFilesWindow.triggered.connect(self.maximizeLocalFiles)
+        maximizeLocalFilesWindow.setShortcut('Alt+C')
+        maximizeDownloaderWindow = QAction('Maximize Downloader Window', self)
+        maximizeDownloaderWindow.triggered.connect(self.maximizeDownloader)
+        maximizeDownloaderWindow.setShortcut('Alt+V')
+        resetWindow = QAction('Reset Window Layout', self)
+        resetWindow.triggered.connect(self.resetWindow)
+        resetWindow.setShortcut('Alt+R')
+
+
         self.menuBar().setNativeMenuBar(True)
         fileMenu = QMenu('About')
-        fileMenu.addAction
         fileMenu.addAction(exitAction)
         fileMenu.addAction(aboutQtAction)
         fileMenu.addAction(updateAction)
         fileMenu.addAction(debugAction)
+
+        windowMenu = QMenu('Window')
+        windowMenu.addAction(maximizeCourseWindow)
+        windowMenu.addAction(maximizeResourceWindow)
+        windowMenu.addAction(maximizeLocalFilesWindow)
+        windowMenu.addAction(maximizeDownloaderWindow)
+        windowMenu.addAction(resetWindow)
+
         self.menuBar().addMenu(fileMenu)
+        self.menuBar().addMenu(windowMenu)
+
+    def maximizeCourse(self):
+        self.hSplitter1.setSizes([self.maxWidth, 0])
+        self.vSplitter.setSizes([self.maxHeight, 0])
+
+    def maximizeResource(self):
+        self.hSplitter1.setSizes([0, self.maxWidth])
+        self.vSplitter.setSizes([self.maxHeight, 0])
+
+    def maximizeLocalFiles(self):
+        self.hSplitter2.setSizes([self.maxWidth, 0])
+        self.vSplitter.setSizes([0, self.maxHeight])
+
+    def maximizeDownloader(self):
+        self.hSplitter2.setSizes([0, self.maxWidth])
+        self.vSplitter.setSizes([0, self.maxHeight])
+
+    def resetWindow(self):
+        self.hSplitter1.setSizes([self.maxWidth, self.maxWidth])
+        self.hSplitter2.setSizes([self.maxWidth, self.maxWidth])
+        self.vSplitter.setSizes([self.maxHeight, self.maxHeight])
 
     def checkUpdate(self):
         checkUpdateDialog = CheckUpdateDialog(self.settings)
