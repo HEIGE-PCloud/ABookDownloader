@@ -21,7 +21,6 @@ class CourseTreeWidget(QWidget, ABookCore):
 
         self.signal = CourseTreeWidgetSignals()
         self.selected_list = []
-        self.pd = ProgressBarDialog(0, 100, 0, 100)
 
         self.TreeWidget = QTreeWidget()
         self.TreeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
@@ -106,12 +105,6 @@ class CourseTreeWidget(QWidget, ABookCore):
                     for resource in downloadList:
                         fileDir, filePath, fileName, coursePath = self.getResourcePath(courseId, chapterId, resource["resourceInfoId"])
                         self.signal.addDownloadTask.emit(fileName, filePath, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
-
-    def refresh_course_list_tree(self):
-        worker = RefreshCourseListWorker(self)
-        self.setDisabled(True)
-        self.pd.show()
-        worker.start()
 
     def startImportCourseWidget(self):
         wizard = ImportCourseWizard(self)
