@@ -147,5 +147,5 @@ if __name__ == "__main__":
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()
     if settings['debug'] == True:
-        abook.course_tree_widget.refresh_button.setDisabled(True)
+        abook.course_tree_widget.importCourseButton.setDisabled(True)
     sys.exit(app.exec_())

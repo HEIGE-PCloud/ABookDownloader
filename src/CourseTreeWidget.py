@@ -21,29 +21,29 @@ class CourseTreeWidget(QWidget, ABookCore):
         ABookCore.__init__(self, path, settings, session)
 
         self.signal = CourseTreeWidgetSignals()
-        self.selected_list = []
+        self.selectedList = []
 
-        self.TreeWidget = QTreeWidget()
-        self.TreeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
-        self.TreeWidget.itemChanged.connect(self.checkbox_toggled)
-        self.TreeWidget.clicked.connect(self.loadResourceList)
+        self.treeWidget = QTreeWidget()
+        self.treeWidget.setHeaderLabels(['Name', "Course ID", "Chapter ID"])
+        self.treeWidget.itemChanged.connect(self.checkbox_toggled)
+        self.treeWidget.clicked.connect(self.loadResourceList)
 
-        self.download_button = QPushButton("Download Selected")
-        self.download_button.clicked.connect(self.addDownloadTask)
+        self.addDownloadTaskButton = QPushButton("Add selected items to the downloader")
+        self.addDownloadTaskButton.clicked.connect(self.addDownloadTask)
 
-        self.refresh_button = QPushButton("Import Courses")
-        self.refresh_button.clicked.connect(self.startImportCourseWidget)
+        self.importCourseButton = QPushButton("Import Courses")
+        self.importCourseButton.clicked.connect(self.startImportCourseWidget)
 
         main_layout = QGridLayout()
-        main_layout.addWidget(self.TreeWidget, 0, 0, 1, 2)
-        main_layout.addWidget(self.refresh_button, 1, 0)
-        main_layout.addWidget(self.download_button, 1, 1)
+        main_layout.addWidget(self.treeWidget, 0, 0, 1, 2)
+        main_layout.addWidget(self.importCourseButton, 1, 0)
+        main_layout.addWidget(self.addDownloadTaskButton, 1, 1)
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
         if settings['first_launch'] == True:
             settings['first_launch'] = False
-            self.refresh_button.click()
+            self.importCourseButton.click()
         else:
             self.createTreeRoot()
 
@@ -52,7 +52,7 @@ class CourseTreeWidget(QWidget, ABookCore):
         for course in courseList:
             courseId = course['courseInfoId']
             currentChapterList = self.getChapterList(courseId)
-            self.createTree(self.TreeWidget, 'course', course, currentChapterList, courseId)
+            self.createTree(self.treeWidget, 'course', course, currentChapterList, courseId)
 
     def createTree(self, parentItem, itemType, itemData, chapterList, courseId):
         if itemType == 'course':
@@ -77,12 +77,12 @@ class CourseTreeWidget(QWidget, ABookCore):
 
     def checkbox_toggled(self, node: QTreeWidgetItem, column: int):
         if node.checkState(column) == Qt.Checked:
-            self.selected_list.append([node.text(0), node.text(1), node.text(2)])
+            self.selectedList.append([node.text(0), node.text(1), node.text(2)])
         elif node.checkState(column) == Qt.Unchecked:
-            if len(self.selected_list) > 1:
-                self.selected_list.remove([node.text(0), node.text(1), node.text(2)])
+            if len(self.selectedList) > 1:
+                self.selectedList.remove([node.text(0), node.text(1), node.text(2)])
             else:
-                self.selected_list = []
+                self.selectedList = []
 
     def createCourseTreeItem(self, name: str, courseId: str, chapterId: str, hasChild: bool):
         item = QTreeWidgetItem()
@@ -97,7 +97,7 @@ class CourseTreeWidget(QWidget, ABookCore):
         return item
 
     def addDownloadTask(self):
-        for item in self.selected_list:
+        for item in self.selectedList:
             if item[1] != "None" and item[2] != "None":
                 courseId = item[1]
                 chapterId = item[2]
@@ -113,9 +113,9 @@ class CourseTreeWidget(QWidget, ABookCore):
 
     def loadResourceList(self):
         # When triggered on click, first adjust the width of the column
-        self.TreeWidget.resizeColumnToContents(0)
-        self.TreeWidget.resizeColumnToContents(1)
-        self.TreeWidget.resizeColumnToContents(2)
+        self.treeWidget.resizeColumnToContents(0)
+        self.treeWidget.resizeColumnToContents(1)
+        self.treeWidget.resizeColumnToContents(2)
 
         # Get the course_id and chapter_id
         courseId = self.sender().currentItem().text(1)
