@@ -95,7 +95,7 @@ class EndPage(QWizardPage):
         self.parent = parent
 
     def initializePage(self) -> None:
-        self.parent.TreeWidget.clear()
+        self.parent.treeWidget.clear()
         self.parent.createTreeRoot()
 
 class RefreshCourseListSignals(QObject):
