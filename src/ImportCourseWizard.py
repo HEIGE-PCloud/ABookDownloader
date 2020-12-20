@@ -114,7 +114,6 @@ class RefreshCourseListWorker(QThread):
         courseList = self.parent.getCourseList()
         for i in range(len(courseList)):
             print("Updating #{} course with total {}".format(i + 1, len(courseList)))
-            self.signals.updateCourse.emit(i + 1, len(courseList))
             courseId = courseList[i]['courseInfoId']
             chapterList = self.parent.getChapterList(courseId)
             for j in range(len(chapterList)):
@@ -125,6 +124,7 @@ class RefreshCourseListWorker(QThread):
                     self.parent.getResourceList(courseId, chapterId)
                 except:
                     pass
+            self.signals.updateCourse.emit(i + 1, len(courseList))
         self.signals.isComplete.emit()
         # self.parent.TreeWidget.clear()
         # self.parent.setDisabled(False)
