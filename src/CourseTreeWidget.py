@@ -1,5 +1,3 @@
-import logging
-
 from PySide2.QtCore import QObject, Qt, QThread, Signal
 from PySide2.QtGui import QImage, QStandardItem
 from PySide2.QtWidgets import (QGridLayout, QPushButton, QTreeWidget,
@@ -13,6 +11,7 @@ class CourseTreeWidgetSignals(QObject):
     clearFileListWidget = Signal()
     appendRowFileListWidget = Signal(QStandardItem)
     addDownloadTask = Signal(str, str, str)
+
 
 class CourseTreeWidget(QWidget, ABookCore):
 
@@ -41,7 +40,7 @@ class CourseTreeWidget(QWidget, ABookCore):
         main_layout.setMargin(0)
         self.setLayout(main_layout)
 
-        if settings['first_launch'] == True:
+        if settings['first_launch'] is True:
             settings['first_launch'] = False
             self.importCourseButton.click()
         else:
@@ -89,7 +88,7 @@ class CourseTreeWidget(QWidget, ABookCore):
         item.setText(0, str(name))
         item.setText(1, str(courseId))
         item.setText(2, str(chapterId))
-        if hasChild == True:
+        if hasChild is True:
             item.setFlags(item.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         else:
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
@@ -102,10 +101,12 @@ class CourseTreeWidget(QWidget, ABookCore):
                 courseId = item[1]
                 chapterId = item[2]
                 downloadList = self.getResourceList(courseId, chapterId)
-                if downloadList != None:
+                if downloadList is not None:
                     for resource in downloadList:
-                        fileDir, filePath, fileName, coursePath = self.getResourcePath(courseId, chapterId, resource["resourceInfoId"])
-                        self.signal.addDownloadTask.emit(fileName, filePath, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])    
+                        fileDir, filePath, fileName, coursePath = self.getResourcePath(
+                            courseId, chapterId, resource["resourceInfoId"])
+                        self.signal.addDownloadTask.emit(
+                            fileName, filePath, "http://abook.hep.com.cn/ICourseFiles/" + resource["resFileUrl"])
 
     def startImportCourseWidget(self):
         wizard = ImportCourseWizard(self)
@@ -152,6 +153,7 @@ class CourseTreeWidget(QWidget, ABookCore):
                     resourceItemList.append(resourceItem)
                 loadPicWorker = LoadPicWorker(resourceItemList, self)
                 loadPicWorker.start()
+
 
 class LoadPicWorker(QThread):
 

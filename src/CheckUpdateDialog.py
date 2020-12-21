@@ -7,6 +7,7 @@ from PySide2.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QPushB
 
 from Settings import Settings
 
+
 class CheckUpdateWorker(QThread):
 
     def __init__(self, settings, parent=None) -> None:
@@ -16,10 +17,6 @@ class CheckUpdateWorker(QThread):
         self.settings = settings
 
     def run(self):
-        proxies = {
-            'http': '127.0.0.1:7890',
-            'https': '127.0.0.1:7890'
-        }
         data = requests.get(self.api, proxies=self.settings['proxies']).json()
         self.parent.checkUpdatePushButton.setDisabled(False)
         self.parent.signal.versionInformationSignal.emit('Failed!')
@@ -35,10 +32,12 @@ class CheckUpdateWorker(QThread):
             self.parent.signal.versionInformationSignal.emit('No new version detected.')
             self.parent.signal.versionLabelSignal.emit(version)
 
+
 class CheckUpdateSignals(QObject):
     versionInformationSignal = Signal(str)
     versionLabelSignal = Signal(str)
     downloadUrlSignal = Signal(str)
+
 
 class CheckUpdateDialog(QDialog):
 
@@ -98,6 +97,7 @@ class CheckUpdateDialog(QDialog):
     def copy(self):
         pyperclip.copy(self.downloadUrl)
         self.copyUrlButton.setText('Copied!')
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

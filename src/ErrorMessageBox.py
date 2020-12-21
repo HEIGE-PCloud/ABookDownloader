@@ -1,9 +1,7 @@
 import subprocess
-from PySide2.QtCore import QObject, Signal
 
 import pyperclip
 from PySide2.QtWidgets import QMessageBox, QWidget
-
 
 
 class ErrorMessageBox(QWidget):

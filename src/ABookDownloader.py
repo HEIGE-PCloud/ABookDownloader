@@ -12,6 +12,7 @@ from FileListWidget import FileListWidget
 from Settings import Settings
 from UserLoginDialog import UserLoginDialog
 
+
 class ABookDownloaderMainWindow(QMainWindow):
 
     def __init__(self, path, settings, session):
@@ -54,7 +55,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         exitAction.setShortcut('Alt+F4')
         exitAction.setStatusTip('Quit')
         exitAction.triggered.connect(self.close)
-        
+
         aboutAction = QAction('About', self)
         aboutAction.setStatusTip('About')
 
@@ -68,7 +69,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         debugAction = QAction('Debug', self)
         debugAction.triggered.connect(self.debug)
 
-        maximizeCourseWindow = QAction('Maximize Course Window', self) 
+        maximizeCourseWindow = QAction('Maximize Course Window', self)
         maximizeCourseWindow.triggered.connect(self.maximizeCourse)
         maximizeCourseWindow.setShortcut('Alt+D')
         maximizeResourceWindow = QAction('Maximize Resource Window', self)
@@ -83,7 +84,6 @@ class ABookDownloaderMainWindow(QMainWindow):
         resetWindow = QAction('Reset Window Layout', self)
         resetWindow.triggered.connect(self.resetWindow)
         resetWindow.setShortcut('Alt+R')
-
 
         self.menuBar().setNativeMenuBar(True)
         fileMenu = QMenu('About')
@@ -126,26 +126,28 @@ class ABookDownloaderMainWindow(QMainWindow):
     def checkUpdate(self):
         checkUpdateDialog = CheckUpdateDialog(self.settings)
         checkUpdateDialog.exec_()
-    
+
     def debug(self):
         raise SystemError
+
 
 def init():
     dirList = ['./Downloads', './temp', './temp/jsonCache', './temp/picCache']
     for dir in dirList:
         os.makedirs(dir, exist_ok=True)
-            
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     init()
     settings = Settings('./temp/settings.json')
     user = UserLoginDialog(settings)
-    if settings['debug'] == False:
+    if settings['debug'] is False:
         user.exec_()
-        if user.loginStatus == False:
+        if user.loginStatus is False:
             exit(0)
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()
-    if settings['debug'] == True:
+    if settings['debug'] is True:
         abook.course_tree_widget.importCourseButton.setDisabled(True)
     sys.exit(app.exec_())

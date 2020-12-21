@@ -1,11 +1,14 @@
+import logging
 import os
 import sys
-import time 
-from PySide2.QtCore import QObject, QThread, Qt, Signal
-from PySide2.QtWidgets import QApplication, QCheckBox, QGridLayout, QProgressBar, QPushButton, QTableWidget, QTableWidgetItem, QWidget
-import logging
+import time
 
 import requests
+from PySide2.QtCore import QObject, Qt, QThread, Signal
+from PySide2.QtWidgets import (QApplication, QCheckBox, QGridLayout,
+                               QProgressBar, QPushButton, QTableWidget,
+                               QTableWidgetItem, QWidget)
+
 
 class FileDownloaderSignals(QObject):
     startDownload = Signal()
@@ -13,6 +16,7 @@ class FileDownloaderSignals(QObject):
     downloadSpeed = Signal(int, str)
     downloadStatus = Signal(int, str)
     progressBarValue = Signal(int, int)
+
 
 class FileDownloaderWidget(QWidget):
 
@@ -30,7 +34,7 @@ class FileDownloaderWidget(QWidget):
         self.RETRY = 8
         self.DELETE = 9
         self.signals = FileDownloaderSignals()
-        self.tableWidget = QTableWidget()       
+        self.tableWidget = QTableWidget()
         self.startDownloadButton = QPushButton('Start Download')
         self.clearListButton = QPushButton('Clear Download List')
         self.hideFinishedCheckBox = QCheckBox('Hide Finished')
@@ -49,12 +53,13 @@ class FileDownloaderWidget(QWidget):
 
     def createTable(self):
         # taskId | fileName | progressBar | speed | status | url | filePath | cancel | retry | delete
-        tableItemList = ['Task ID', 'File Name', 'Progress Bar', 'Download Speed', 'Download Status', 'Url', 'File Path', 'Cancel', 'Retry', 'Delete']
+        tableItemList = ['Task ID', 'File Name', 'Progress Bar', 'Download Speed',
+                         'Download Status', 'Url', 'File Path', 'Cancel', 'Retry', 'Delete']
         self.tableWidget.setColumnCount(len(tableItemList))
         self.tableWidget.setRowCount(0)
         for i in range(len(tableItemList)):
             self.tableWidget.setHorizontalHeaderItem(i, QTableWidgetItem(tableItemList[i]))
-        
+
     def addDownloadItem(self, taskId: str, fileName: str, filePath: str, url: str):
         row = self.tableWidget.rowCount()
         self.tableWidget.setRowCount(row + 1)
@@ -111,7 +116,7 @@ class FileDownloaderWidget(QWidget):
         self.tableWidget.setCellWidget(row, 8, retryButton)
         self.tableWidget.setItem(row, 9, deleteItem)
         self.tableWidget.setCellWidget(row, 9, deleteButton)
-        
+
     def hideFinished(self):
         """
         hideFinished() is triggered when the hideFinishedCheckbox is clicked
@@ -123,7 +128,7 @@ class FileDownloaderWidget(QWidget):
         rowList = rowListCancel + rowListFinished
         logging.debug("rowList: {}".format(rowList))
         for row in rowList:
-            if self.hideFinishedCheckBox.isChecked() == True:
+            if self.hideFinishedCheckBox.isChecked() is True:
                 self.tableWidget.hideRow(row)
             else:
                 self.tableWidget.showRow(row)
@@ -238,7 +243,7 @@ class DownloadWorker(QThread):
 
     def __init__(self, taskId, filePath, url, downloadNext=True, parent=None):
         QThread.__init__(self, parent)
-        
+
         self.taskId = taskId
         self.filePath = filePath
         self.dirPath = os.path.dirname(self.filePath)
@@ -289,15 +294,17 @@ class DownloadWorker(QThread):
             self.signals.startDownload.emit()
         self.exit(0)
 
-if __name__ == '__main__': 
+
+if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     logging.info("init")
-    app = QApplication(sys.argv) 
-    downloader = FileDownloaderWidget() 
+    app = QApplication(sys.argv)
+    downloader = FileDownloaderWidget()
     downloader.show()
-    downloader.addDownloadTask("test1", "C:\\Users\\HEIGE\\Documents\\test1.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
-    downloader.addDownloadTask("test2", "C:\\Users\\HEIGE\\Documents\\test2.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
-    downloader.addDownloadTask("test3", "C:\\Users\\HEIGE\\Documents\\test3.bin", "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin")
+    url = "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin"
+    downloader.addDownloadTask("test1", "C:\\Users\\HEIGE\\Documents\\test1.bin", url)
+    downloader.addDownloadTask("test2", "C:\\Users\\HEIGE\\Documents\\test2.bin", url)
+    downloader.addDownloadTask("test3", "C:\\Users\\HEIGE\\Documents\\test3.bin", url)
 
-    sys.exit(app.exec_()) 
+    sys.exit(app.exec_())

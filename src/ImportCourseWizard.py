@@ -1,7 +1,9 @@
 import sys
-from PySide2.QtCore import QObject, QThread, Qt, Signal
-from PySide2.QtWidgets import QApplication, QGridLayout, QLabel, QListWidget, QListWidgetItem, QProgressBar, QWizard, QWizardPage
 
+from PySide2.QtCore import QObject, Qt, QThread, Signal
+from PySide2.QtWidgets import (QApplication, QGridLayout, QLabel, QListWidget,
+                               QListWidgetItem, QProgressBar, QWizard,
+                               QWizardPage)
 
 
 class ImportCourseWizard(QWizard):
@@ -14,6 +16,7 @@ class ImportCourseWizard(QWizard):
         self.addPage(EndPage(parent))
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
+
 class StartPage(QWizardPage):
 
     def __init__(self, parent=None):
@@ -23,6 +26,7 @@ class StartPage(QWizardPage):
         layout = QGridLayout()
         layout.addWidget(label)
         self.setLayout(layout)
+
 
 class SelectCoursePage(QWizardPage):
 
@@ -44,6 +48,7 @@ class SelectCoursePage(QWizardPage):
             # courseItem.setFlags(courseItem.flags() | Qt.ItemIsUserCheckable)
             # courseItem.setCheckState(Qt.Checked)
             self.courseListWidget.addItem(courseItem)
+
 
 class ImportPage(QWizardPage):
 
@@ -83,6 +88,7 @@ class ImportPage(QWizardPage):
         self.completeStatus = True
         self.completeChanged.emit()
 
+
 class EndPage(QWizardPage):
 
     def __init__(self, parent=None):
@@ -98,18 +104,20 @@ class EndPage(QWizardPage):
         self.parent.treeWidget.clear()
         self.parent.createTreeRoot()
 
+
 class RefreshCourseListSignals(QObject):
     updateCourse = Signal(int, int)
     updateChapter = Signal(int, int)
     isComplete = Signal()
-    
+
+
 class RefreshCourseListWorker(QThread):
 
     def __init__(self, parent=None):
         super(RefreshCourseListWorker, self).__init__(parent)
         self.parent = parent
         self.signals = RefreshCourseListSignals()
-    
+
     def run(self):
         courseList = self.parent.getCourseList()
         for i in range(len(courseList)):
@@ -120,14 +128,10 @@ class RefreshCourseListWorker(QThread):
                 print("Update #{} chapter with total {}".format(j + 1, len(chapterList)))
                 self.signals.updateChapter.emit(j + 1, len(chapterList))
                 chapterId = chapterList[j]['id']
-                try:
-                    self.parent.getResourceList(courseId, chapterId)
-                except:
-                    pass
+                self.parent.getResourceList(courseId, chapterId)
             self.signals.updateCourse.emit(i + 1, len(courseList))
         self.signals.isComplete.emit()
-        # self.parent.TreeWidget.clear()
-        # self.parent.setDisabled(False)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

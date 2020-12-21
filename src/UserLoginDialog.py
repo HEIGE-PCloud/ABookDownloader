@@ -1,8 +1,14 @@
-from PySide2.QtCore import QThread, Qt, Signal, Slot
-from PySide2.QtWidgets import QApplication, QCheckBox, QDialog, QGridLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget
 import sys
+import requests
+
+from PySide2.QtCore import Qt, QThread, Signal, Slot
+from PySide2.QtWidgets import (QApplication, QCheckBox, QDialog, QGridLayout,
+                               QLabel, QLineEdit, QMessageBox, QPushButton,
+                               QVBoxLayout, QWidget)
 
 from ABookCore import ABookLogin
+from Settings import Settings
+
 
 class LoginWidget(QWidget):
 
@@ -35,7 +41,7 @@ class LoginWidget(QWidget):
 
         self.checkBox = QCheckBox("Show Password")
         self.checkBox.stateChanged.connect(CheckBoxStateChanged)
-        
+
         # layout
         layout = QGridLayout()
         layout.addWidget(self.usernameLabel, 0, 0)
@@ -48,7 +54,8 @@ class LoginWidget(QWidget):
         self.setLayout(layout)
 
         self.setFont('Microsoft YaHei UI')
-    
+
+
 class LoginWorker(QThread):
 
     update_status = Signal(str)
@@ -67,13 +74,15 @@ class LoginWorker(QThread):
             self.parent().saveUserInfoToFile()
 
             # Step 2: post user info to ABook
-            self.update_status.emit("Posting user's info to ABook... (Step 2/2)")        
-            response = self.parent().session.post(url=self.parent().loginUrl, data=self.parent().userInfo, headers=self.parent().headers)
+            self.update_status.emit("Posting user's info to ABook... (Step 2/2)")
+            response = self.parent().session.post(url=self.parent().loginUrl, data=self.parent().userInfo,
+                                                  headers=self.parent().headers)
 
             # send login status signal
             self.login_response.emit(response.json()[0]['message'] == 'successful')
-        except:
+        except requests.ConnectionError:
             self.login_response.emit(False)
+
 
 class UserLoginDialog(QDialog, ABookLogin):
 
@@ -83,9 +92,9 @@ class UserLoginDialog(QDialog, ABookLogin):
         self.initLayout()
         if settings['auto_login']:
             self.login_widget.loginButton.click()
-    
+
     def initLayout(self):
-        self.login_widget =  LoginWidget(self)
+        self.login_widget = LoginWidget(self)
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.login_widget)
         self.setLayout(self.layout)
@@ -114,8 +123,8 @@ class UserLoginDialog(QDialog, ABookLogin):
             self.login_widget.setDisabled(False)
 
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    login = UserLoginDialog()
+    settings = Settings('./temp/user_info.json')
+    login = UserLoginDialog(settings)
     login.exec_()

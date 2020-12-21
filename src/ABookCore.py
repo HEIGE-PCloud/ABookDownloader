@@ -1,33 +1,34 @@
 import os
 import json
-import logging
 import requests
-
+from json import JSONDecodeError
 from Settings import Settings
+
 
 class ABookLogin(object):
 
     def __init__(self) -> None:
         super().__init__()
         self.loginStatus = False
-        self.userInfo = {'loginUser.loginName': '', 'loginUser.loginPassword': ''}
+        self.userInfo = {
+            'loginUser.loginName': '', 'loginUser.loginPassword': ''}
         self.path = './temp/user_info.json'
         self.session = requests.session()
         self.loginUrl = "http://abook.hep.com.cn/loginMobile.action"
         self.loginStatusUrl = "http://abook.hep.com.cn/verifyLoginMobile.action"
-        self.headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.64"}
+        self.headers = {"User-Agent": "Chrome/83.0.4103.116"}
 
         self.readUserInfoFromFile()
-    
+
     def readUserInfoFromFile(self):
         try:
             with open(self.path, 'r', encoding='utf-8') as file:
                 self.userInfo = json.load(file)
                 self.username = self.userInfo['loginUser.loginName']
                 self.password = self.userInfo['loginUser.loginPassword']
-        except:
+        except JSONDecodeError or FileNotFoundError:
             pass
-        
+
     def saveUserInfoToFile(self) -> None:
         with open(self.path, 'w', encoding='utf-8') as file:
             json.dump(self.userInfo, file, ensure_ascii=False, indent=4)
@@ -36,6 +37,7 @@ class ABookLogin(object):
         response = self.session.post(self.loginUrl, self.userInfo, headers=self.headers)
         print(response.json()[0]['message'])
         self.loginStatus = (response.json()[0]['message'] == 'successful')
+
 
 class ABookCore(object):
     def __init__(self, path: str, settings: Settings, user):
@@ -62,21 +64,21 @@ class ABookCore(object):
         pass some Args into it.
         If forceRefresh is True, then getData() will fetch from web api directly.
         """
-        
-        if forceRefresh == False:
+
+        if forceRefresh is False:
 
             # Check the memory cache first
             if cachePath in self.cache:
                 return self.cache[cachePath]
-            
-            # If not in memory cache, then check the local file 
+
+            # If not in memory cache, then check the local file
             if os.path.exists(cachePath):
                 # If the local json file is broken, then fallback to web api
                 try:
                     data = self.loadJsonFromFile(cachePath)
                     self.cache[cachePath] = data
                     return data
-                except:
+                except JSONDecodeError or UnicodeDecodeError:
                     with open(cachePath, 'rb') as file:
                         data = file.read()
                     return data
@@ -88,7 +90,7 @@ class ABookCore(object):
             self.saveJsonToFile(cachePath, jsonData)
             self.cache[cachePath] = jsonData
             return jsonData
-        except:
+        except JSONDecodeError:
             data = data.content
             with open(cachePath, 'wb') as file:
                 file.write(data)
@@ -156,7 +158,7 @@ class ABookCore(object):
             for course in courseListPage[0]['myMobileCourseList']:
                 courseList.append(course)
         return courseList
-        
+
     def getChapterList(self, courseId):
         """
         getChapterList() returns the chapterList under the courseId
@@ -172,7 +174,7 @@ class ABookCore(object):
         resourceList = []
         resourceListPage = self.get('resourceList', [courseId, chapterId, cur])
         if type(resourceListPage) != list:
-            return None        
+            return None
         if 'myMobileResourceList' in resourceListPage[0]:
             for resource in resourceListPage[0]['myMobileResourceList']:
                 resourceList.append(resource)
@@ -191,7 +193,7 @@ class ABookCore(object):
         for course in courseList:
             if course['courseInfoId'] == int(courseId):
                 return course
-                
+
     def getChapter(self, courseId, chapterId):
         """
         getChapter() returns the chapter under courseId with chapterId
@@ -204,7 +206,7 @@ class ABookCore(object):
     def getResource(self, courseId, chapterId, resourceId):
         """
         getResource() returns the resource under courseId and chapterId
-        with resourceId 
+        with resourceId
         """
         resourceList = self.getResourceList(courseId, chapterId)
         for resource in resourceList:
@@ -267,17 +269,18 @@ class ABookCore(object):
             name = name + "(Renamed)"
         return name
 
+
 if __name__ == "__main__":
     settings = Settings('./temp/settings.json')
     user = ABookLogin()
     user.login()
     abook = ABookCore('./temp/', settings, user)
 
-      # Simple tests
+    # Simple tests
     courseList = abook.getCourseList()
     # Excepted 3
     print(len(courseList))
-    
+
     print(courseList[0])
 
     chapterList = abook.getChapterList(5000003293)

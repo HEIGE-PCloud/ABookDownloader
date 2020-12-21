@@ -1,14 +1,18 @@
 import os
-import sys
-from PySide2.QtWidgets import QApplication, QCompleter, QFileDialog, QFileSystemModel, QGridLayout, QLineEdit, QPushButton, QSizePolicy, QTreeView, QWidget
 import subprocess
+import sys
+
+from PySide2.QtWidgets import (QApplication, QCompleter, QFileDialog,
+                               QFileSystemModel, QGridLayout, QLineEdit,
+                               QPushButton, QSizePolicy, QTreeView, QWidget)
+
 
 class DownloadDirTreeWidget(QWidget):
 
     def __init__(self, root_path) -> None:
         QWidget.__init__(self)
 
-        # self.index stores the index of the latest item which is clicked 
+        # self.index stores the index of the latest item which is clicked
         # self.root_path is the path to the folder currently showing
         self.index = None
         self.root_path = os.path.abspath(root_path)
@@ -20,10 +24,10 @@ class DownloadDirTreeWidget(QWidget):
         self.dir_view.doubleClicked.connect(self.onFileItemDoubleClicked)
         self.dir_view.setModel(self.model)
         self.dir_view.setRootIndex(self.model.index(self.root_path))
-        
+
         open_button = QPushButton("Open")
         open_button.clicked.connect(self.openFile)
-        
+
         open_in_file_explorer_button = QPushButton("Open in File Explorer")
         open_in_file_explorer_button.clicked.connect(self.openInFileExplorer)
 
@@ -34,7 +38,7 @@ class DownloadDirTreeWidget(QWidget):
 
         change_path_button = QPushButton('Change Directory')
         change_path_button.clicked.connect(self.onChangeButtonClicked)
-        
+
         addressCompleter = QCompleter()
         addressCompleter.setModel(self.model)
         self.root_path_line_edit.setCompleter(addressCompleter)
@@ -48,23 +52,23 @@ class DownloadDirTreeWidget(QWidget):
         layout.addWidget(open_in_file_explorer_button, 2, 1, 1, 1)
         layout.setMargin(0)
         self.setLayout(layout)
- 
+
     def setRootPath(self, root_path):
         self.root_path = os.path.abspath(root_path)
 
     def openFile(self):
-        if self.index != None:
+        if self.index is not None:
             file_path = self.model.filePath(self.index).replace('/', '\\')
             is_dir = self.model.isDir(self.index)
             # If is file, open with default program
             # If is directory, open with file explorer
-            if is_dir == False:
+            if is_dir is False:
                 os.startfile(file_path, 'open')
             else:
                 subprocess.run(['explorer', file_path])
 
     def openInFileExplorer(self):
-        if self.index != None:
+        if self.index is None:
             file_path = self.model.filePath(self.index).replace('/', '\\')
             subprocess.run(['explorer', '/select,', file_path])
 
@@ -76,7 +80,7 @@ class DownloadDirTreeWidget(QWidget):
     def onFileItemDoubleClicked(self, index):
         # When double clicked, update self.index and open the file directly
         self.index = index
-        if self.sender().model().isDir(index) == False:
+        if self.sender().model().isDir(index) is False:
             self.openFile()
 
     def onChangeButtonClicked(self):
@@ -96,6 +100,7 @@ class DownloadDirTreeWidget(QWidget):
             self.root_path = os.path.abspath(new_path)
             self.dir_view.setRootIndex(self.model.index(self.root_path))
             self.root_path_line_edit.setText(self.root_path)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
