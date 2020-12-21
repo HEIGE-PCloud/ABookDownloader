@@ -12,6 +12,8 @@ class ABookLogin(object):
         self.loginStatus = False
         self.userInfo = {
             'loginUser.loginName': '', 'loginUser.loginPassword': ''}
+        self.username = ''
+        self.password = ''
         self.path = './temp/user_info.json'
         self.session = requests.session()
         self.loginUrl = "http://abook.hep.com.cn/loginMobile.action"
@@ -28,6 +30,13 @@ class ABookLogin(object):
                 self.password = self.userInfo['loginUser.loginPassword']
         except JSONDecodeError or FileNotFoundError:
             pass
+
+    def setUserInfo(self, username: str, password: str):
+        self.username = username
+        self.password = password
+        self.userInfo['loginUser.loginName'] = username
+        self.userInfo['loginUser.loginPassword'] = password
+        self.saveUserInfoToFile()
 
     def saveUserInfoToFile(self) -> None:
         with open(self.path, 'w', encoding='utf-8') as file:
