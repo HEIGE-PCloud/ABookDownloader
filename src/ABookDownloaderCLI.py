@@ -324,25 +324,25 @@ if __name__ == "__main__":
 
     if user_info is not False:
         choice = input("User {} founded! Do you want to log in as {}? (y/n) ".format(
-            user_info['login_name'], user_info['login_name']))
+            user_info['loginUser.loginName'], user_info['loginUser.loginName']))
         if choice == 'n':
             user_info = False
 
     if user_info is False:
         login_name = input("Please input login name: ")
         login_password = input("Please input login password: ")
-        user_info = {'login_name': login_name,
-                     'login_password': login_password}
+        user_info = {'loginUser.loginName': login_name,
+                     'loginUser.loginPassword': login_password}
         write_login_info(user_info, USER_INFO)
 
     # User login
     while True:
-        if Abook_login(user_info['login_name'], user_info['login_password']):
+        if Abook_login(user_info['loginUser.loginName'], user_info['loginUser.loginPassword']):
             break
         login_name = input("Please input login name: ")
         login_password = input("Please input login password: ")
-        user_info = {'login_name': login_name,
-                     'login_password': login_password}
+        user_info = {'loginUser.loginName': login_name,
+                     'loginUser.loginPassword': login_password}
         write_login_info(user_info, USER_INFO)
 
     # Get and load courses infomation
