@@ -5,12 +5,14 @@ on:
     branches:  
       - master 
     tags: 
-      - '*'
+      - v2
+      - v2.*
   pull_request:
     branches:  
       - master 
     tags: 
-      - '*'
+      - v2
+      - v2.*
 jobs:
   build:
     runs-on: ubuntu-latest
