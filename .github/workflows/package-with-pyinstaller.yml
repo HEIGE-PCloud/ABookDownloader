@@ -57,7 +57,7 @@ jobs:
         asset_content_type: application/exe
 
     - name: Upload Artifact
-    - uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2
       with:
         name: ABookDownloader
         path: src/dist/windows/ABookDownloader.exe
