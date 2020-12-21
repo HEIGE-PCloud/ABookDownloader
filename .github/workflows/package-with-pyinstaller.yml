@@ -2,13 +2,15 @@ name: Package Application with Pyinstaller
 
 on:
   push:
-    branches: [ master ]
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    branches:  
+      - master 
+    tags: 
+      - v*
   pull_request:
-    branches: [ master ]
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    branches:  
+      - master 
+    tags: 
+      - v*
 jobs:
   build:
     runs-on: ubuntu-latest
