@@ -1,3 +1,4 @@
+from json.decoder import JSONDecodeError
 import os
 import json
 import time
@@ -49,7 +50,7 @@ def load_settings(file_name):
         with open(file_name, 'r', encoding='utf-8') as file:
             settings = json.load(file)
     except FileNotFoundError:
-        settings = {'download_path' : './Downloads/'}
+        settings = {'download_path': './Downloads/'}
         save_settings(file_name)
     DOWNLOAD_DIR = settings['download_path']
 
@@ -71,7 +72,11 @@ def change_download_path():
 
 
 def init():
-    """This function will create temp and Downloads folders and display welcome. temp is for logs and information gathered while the program is running. The Downloads folder is where to save the downloaded file by default."""
+    """
+    This function will create temp and Downloads folders and display welcome.
+    temp is for logs and information gathered while the program is running.
+    The Downloads folder is where to save the downloaded file by default.
+    """
     safe_mkdir("temp")
     safe_mkdir("Downloads")
     logger = logging.getLogger()
@@ -120,8 +125,7 @@ def Abook_login(login_name, login_password):
     login_status_url = "http://abook.hep.com.cn/verifyLoginMobile.action"
     login_data = {"loginUser.loginName": login_name,
                   "loginUser.loginPassword": login_password}
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.64"}
+    headers = {"User-Agent": "Chrome/83.0.4103.116"}
     session.post(url=login_url, data=login_data, headers=headers)
     if session.post(login_status_url).json()["message"] == "已登录":
         logging.info("Successfully login in!")
@@ -148,9 +152,8 @@ def load_courses_info(file_name):
     courses_list = []
     with open(file_name, 'r', encoding='utf-8') as courses_info:
         try:
-            courses_data: list = json.load(courses_info)[
-                0]['myMobileCourseList']
-        except:
+            courses_data: list = json.load(courses_info)[0]['myMobileCourseList']
+        except JSONDecodeError:
             logging.error("Cannot load courses.")
             return
         print('There are {} course(s) available.'.format(len(courses_data)))
@@ -220,15 +223,15 @@ def download_course_from_root(root_chapter, course_id, path):
     else:
         cur = 1
         all_page_downloaded = False
-        while all_page_downloaded == False:
-            download_link_url = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}".format(
-                course_id, root_chapter['id'], cur)
+        while all_page_downloaded is False:
+            download_link_url = "http://abook.hep.com.cn/courseResourceList.action?courseInfoId={}&treeId={}&cur={}"\
+                                .format(course_id, root_chapter['id'], cur)
             download_url_base = "http://abook.hep.com.cn/ICourseFiles/"
             while True:
                 try:
                     info = session.get(download_link_url).json()[0]
                     break
-                except:
+                except requests.ConnectionError or JSONDecodeError:
                     logging.error(
                         "Info fetched failed, will restart in 5 seconds.")
                     time.sleep(5)
@@ -252,7 +255,7 @@ def download_course_from_root(root_chapter, course_id, path):
                         try:
                             file_downloader(location, url)
                             break
-                        except:
+                        except requests.ConnectionError:
                             logging.error(
                                 "Download failed, will restart in 5 seconds.")
                             time.sleep(5)
@@ -267,7 +270,10 @@ def download_course(download_dir, selected_course, selected_root):
 
 
 def read_login_info(file_name):
-    """Read the local login info from file. Pass through the file name. Return user_info as json if succeed, or return boolean False if failed."""
+    """
+    Read the local login info from file. Pass through the file name.
+    Return user_info as json if succeed, or return boolean False if failed.
+    """
     try:
         with open(file_name, 'r', encoding='utf-8') as file:
             try:
@@ -284,11 +290,8 @@ def read_login_info(file_name):
 def write_login_info(user_info, file_name):
     """Write the user_info as json to file_name file."""
     with open(file_name, 'w', encoding='utf-8') as file:
-        try:
-            json.dump(user_info, file, ensure_ascii=False, indent=4)
-            logging.info("Login details saved.")
-        except:
-            logging.error("Fail to save login details.")
+        json.dump(user_info, file, ensure_ascii=False, indent=4)
+        logging.info("Login details saved.")
 
 
 def select_chapter(title_name, pid):
@@ -302,9 +305,9 @@ def select_chapter(title_name, pid):
             selected_chapter = chapter_list[choice - 1]
             result = select_chapter(
                 selected_chapter['name'], selected_chapter['id'])
-            if result == False:
+            if result is False:
                 continue
-            elif result == True:
+            elif result is True:
                 return selected_chapter
             else:
                 return result
@@ -319,27 +322,27 @@ if __name__ == "__main__":
     # If there isn't, ask user type in information directly.
     user_info = read_login_info(USER_INFO)
 
-    if user_info != False:
+    if user_info is not False:
         choice = input("User {} founded! Do you want to log in as {}? (y/n) ".format(
-            user_info['login_name'], user_info['login_name']))
+            user_info['loginUser.loginName'], user_info['loginUser.loginName']))
         if choice == 'n':
             user_info = False
 
-    if user_info == False:
+    if user_info is False:
         login_name = input("Please input login name: ")
         login_password = input("Please input login password: ")
-        user_info = {'login_name': login_name,
-                     'login_password': login_password}
+        user_info = {'loginUser.loginName': login_name,
+                     'loginUser.loginPassword': login_password}
         write_login_info(user_info, USER_INFO)
 
     # User login
     while True:
-        if Abook_login(user_info['login_name'], user_info['login_password']):
+        if Abook_login(user_info['loginUser.loginName'], user_info['loginUser.loginPassword']):
             break
         login_name = input("Please input login name: ")
         login_password = input("Please input login password: ")
-        user_info = {'login_name': login_name,
-                     'login_password': login_password}
+        user_info = {'loginUser.loginName': login_name,
+                     'loginUser.loginPassword': login_password}
         write_login_info(user_info, USER_INFO)
 
     # Get and load courses infomation
@@ -391,9 +394,9 @@ if __name__ == "__main__":
             selected_root = select_chapter(
                 selected_course['courseTitle'], ROOT)
 
-            if selected_root == False:
+            if selected_root is False:
                 continue
-            if selected_root == True:
+            if selected_root is True:
                 root_list = []
                 for chapter in chapter_list:
                     if chapter['pId'] == 0:
