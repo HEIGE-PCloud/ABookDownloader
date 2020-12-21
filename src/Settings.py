@@ -34,7 +34,7 @@ class Settings(object):
 
         # If fail to operate the local file, or the json format is broken
         # then create a new settings file through default settings
-        except JSONDecodeError:
+        except JSONDecodeError or FileNotFoundError:
 
             logging.error("Fail to open setting file, create a new one.")
 
