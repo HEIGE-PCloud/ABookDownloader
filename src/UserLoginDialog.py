@@ -123,6 +123,6 @@ class UserLoginDialog(QDialog, ABookLogin):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    settings = Settings('./temp/user_info.json')
+    settings = Settings('./temp/settings.json')
     login = UserLoginDialog(settings)
     login.exec_()
