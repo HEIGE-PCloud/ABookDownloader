@@ -45,7 +45,6 @@ class ABookDownloaderMainWindow(QMainWindow):
         self.course_tree_widget.signal.addDownloadTask.connect(self.file_downloader.addDownloadTask)
         self.setCentralWidget(mainWidget)
         self.init_menubar()
-        self.setFont('Microsoft YaHei UI')
         self.setWindowTitle("ABookDownloader Dev")
         self.showMaximized()
         sys.stderr = ErrorMessageBox()
@@ -139,15 +138,30 @@ def init():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    # Basic init
     init()
+
+    # Load settings
     settings = Settings('./temp/settings.json')
+
+    # Set QSS
+    if settings['stylesheet_path'] is not None:
+        path = settings['stylesheet_path']
+        with open(path, 'r', encoding='utf-8') as file:
+            app.setStyleSheet(file.read())
+
+    # User login
     user = UserLoginDialog(settings)
     if settings['debug'] is False:
         user.exec_()
         if user.loginStatus is False:
             exit(0)
+
+    # Main window
     abook = ABookDownloaderMainWindow('./temp/', settings, user)
     abook.show()
     if settings['debug'] is True:
         abook.course_tree_widget.importCourseButton.setDisabled(True)
+
     sys.exit(app.exec_())

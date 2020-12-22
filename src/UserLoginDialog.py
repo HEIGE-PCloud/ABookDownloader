@@ -53,8 +53,6 @@ class LoginWidget(QWidget):
 
         self.setLayout(layout)
 
-        self.setFont('Microsoft YaHei UI')
-
 
 class LoginWorker(QThread):
 

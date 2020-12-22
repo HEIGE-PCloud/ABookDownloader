@@ -13,7 +13,8 @@ class Settings(object):
             'debug': False,
             'proxies': None,
             'auto_login': False,
-            'first_launch': True
+            'first_launch': True,
+            'stylesheet_path': None
             }
 
         self.read_settings_from_file()
