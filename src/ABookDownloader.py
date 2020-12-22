@@ -7,6 +7,7 @@ from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
 from ErrorMessageBox import ErrorMessageBox
+from ExceptionHook import UncaughtHook
 from FileDownloaderWidget import FileDownloaderWidget
 from FileListWidget import FileListWidget
 from Settings import Settings
@@ -127,7 +128,7 @@ class ABookDownloaderMainWindow(QMainWindow):
         checkUpdateDialog.exec_()
 
     def debug(self):
-        raise SystemError
+        raise SystemError('An debug error')
 
 
 def init():
@@ -141,6 +142,8 @@ if __name__ == "__main__":
 
     # Basic init
     init()
+
+    exceptionHook = UncaughtHook()
 
     # Load settings
     settings = Settings('./temp/settings.json')
