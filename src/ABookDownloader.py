@@ -162,7 +162,7 @@ if __name__ == "__main__":
             exit(0)
 
     # Main window
-    abook = ABookDownloaderMainWindow('./temp/', settings, user)
+    abook = ABookDownloaderMainWindow('./temp', settings, user)
     abook.show()
     if settings['debug'] is True:
         abook.course_tree_widget.importCourseButton.setDisabled(True)

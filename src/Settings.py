@@ -15,7 +15,7 @@ class Settings(object):
             'auto_login': False,
             'first_launch': True,
             'stylesheet_path': None
-            }
+        }
 
         self.read_settings_from_file()
 

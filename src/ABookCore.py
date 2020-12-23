@@ -2,19 +2,19 @@ import os
 import json
 import requests
 from json import JSONDecodeError
-from Settings import Settings
+# from Settings import Settings
 
 
 class ABookLogin(object):
 
-    def __init__(self) -> None:
+    def __init__(self, userInfoPath='./temp/user_info') -> None:
         super().__init__()
         self.loginStatus = False
         self.userInfo = {
             'loginUser.loginName': '', 'loginUser.loginPassword': ''}
         self.username = ''
         self.password = ''
-        self.path = './temp/user_info.json'
+        self.userInfoPath = userInfoPath
         self.session = requests.session()
         self.loginUrl = "http://abook.hep.com.cn/loginMobile.action"
         self.loginStatusUrl = "http://abook.hep.com.cn/verifyLoginMobile.action"
@@ -24,7 +24,7 @@ class ABookLogin(object):
 
     def readUserInfoFromFile(self):
         try:
-            with open(self.path, 'r', encoding='utf-8') as file:
+            with open(self.userInfoPath, 'r', encoding='utf-8') as file:
                 self.userInfo = json.load(file)
                 self.username = self.userInfo['loginUser.loginName']
                 self.password = self.userInfo['loginUser.loginPassword']
@@ -39,7 +39,7 @@ class ABookLogin(object):
         self.saveUserInfoToFile()
 
     def saveUserInfoToFile(self) -> None:
-        with open(self.path, 'w', encoding='utf-8') as file:
+        with open(self.userInfoPath, 'w', encoding='utf-8') as file:
             json.dump(self.userInfo, file, ensure_ascii=False, indent=4)
 
     def login(self):
@@ -49,12 +49,12 @@ class ABookLogin(object):
 
 
 class ABookCore(object):
-    def __init__(self, path: str, settings: Settings, user):
+    def __init__(self, cachePath: str, settings, user):
         super().__init__()
         self.settings = settings
         self.session = user.session
         self.user = user
-        self.path = path
+        self.cachePath = cachePath
         self.cache = {}
         self.courseListUrl = "http://abook.hep.com.cn/selectMyCourseList.action?mobile=true&cur={}"
         self.chapterListUrl = "http://abook.hep.com.cn/resourceStructure.action?courseInfoId={}"
@@ -126,13 +126,13 @@ class ABookCore(object):
             urlBase = self.courseListUrl
             cur = argv
             username = self.user.userInfo['loginUser.loginName']
-            cachePath = './temp/jsonCache/courseList({})({}).json'.format(username, cur)
+            cachePath = '{}/jsonCache/courseList({})({}).json'.format(self.cachePath, username, cur)
             return self.getData(cachePath, urlBase, [cur], forceRefresh)
 
         elif type == 'chapterList':
             urlBase = self.chapterListUrl
             courseId = argv
-            cachePath = './temp/jsonCache/chapterList({}).json'.format(courseId)
+            cachePath = '{}/jsonCache/chapterList({}).json'.format(self.cachePath, courseId)
             return self.getData(cachePath, urlBase, [courseId], forceRefresh)
 
         elif type == 'resourceList':
@@ -140,14 +140,14 @@ class ABookCore(object):
             courseId = argv[0]
             chapterId = argv[1]
             cur = argv[2]
-            cachePath = './temp/jsonCache/resourceList({})({})({}).json'.format(courseId, chapterId, cur)
+            cachePath = '{}/jsonCache/resourceList({})({})({}).json'.format(self.cachePath, courseId, chapterId, cur)
             return self.getData(cachePath, urlBase, [courseId, chapterId, cur], forceRefresh)
 
         elif type == 'pic':
             urlBase = self.fileUrl
             picUrl = argv[0]
             picName = argv[1]
-            cachePath = './temp/picCache/{}'.format(picName)
+            cachePath = '{}/picCache/{}'.format(self.cachePath, picName)
             return self.getData(cachePath, urlBase, [picUrl], forceRefresh)
         else:
             raise IndexError("Wrong Index! Only 'courseList', 'chapterList', 'resourceList' are accepted.")
@@ -269,7 +269,7 @@ class ABookCore(object):
             return json.load(file)
 
     def validateFileName(self, name: str):
-        name.strip()
+        name = name.strip()
         keywords = ['/', ':', '*', '?', '"', '<', '>', '|']
         originalName = name
         for word in keywords:
@@ -279,22 +279,22 @@ class ABookCore(object):
         return name
 
 
-if __name__ == "__main__":
-    settings = Settings('./temp/settings.json')
-    user = ABookLogin()
-    user.login()
-    abook = ABookCore('./temp/', settings, user)
+# if __name__ == "__main__":
+#     settings = Settings('./temp/settings.json')
+#     user = ABookLogin()
+#     user.login()
+#     abook = ABookCore('./temp', settings, user)
 
-    # Simple tests
-    courseList = abook.getCourseList()
-    # Excepted 3
-    print(len(courseList))
+#     # Simple tests
+#     courseList = abook.getCourseList()
+#     # Excepted 3
+#     print(len(courseList))
 
-    print(courseList[0])
+#     print(courseList[0])
 
-    chapterList = abook.getChapterList(5000003293)
+#     chapterList = abook.getChapterList(5000003293)
 
-    resourceList = abook.getResourceList(5000003293, 5000343805)
-    print(resourceList)
+#     resourceList = abook.getResourceList(5000003293, 5000343805)
+#     print(resourceList)
 
-    abook.getResourcePath(5000003293, 5000343805, 5000295100)
+#     abook.getResourcePath(5000003293, 5000343805, 5000295100)
