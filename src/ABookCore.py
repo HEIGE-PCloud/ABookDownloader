@@ -23,13 +23,11 @@ class ABookLogin(object):
         self.readUserInfoFromFile()
 
     def readUserInfoFromFile(self):
-        try:
+        if os.path.exists(self.userInfoPath):
             with open(self.userInfoPath, 'r', encoding='utf-8') as file:
                 self.userInfo = json.load(file)
                 self.username = self.userInfo['loginUser.loginName']
                 self.password = self.userInfo['loginUser.loginPassword']
-        except JSONDecodeError or FileNotFoundError or TypeError:
-            pass
 
     def setUserInfo(self, username: str, password: str):
         self.username = username
