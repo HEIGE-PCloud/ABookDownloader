@@ -36,7 +36,8 @@ def test_ABookLogin_1():
     assert user.userInfo == newUserInfo
     assert user.username == newUserInfo['loginUser.loginName']
     assert user.password == newUserInfo['loginUser.loginPassword']
-
+    print(os.environ["loginName"])
+    print(os.environ["loginPassword"])
     # Test loginStatus
     assert user.loginStatus is False
 
