@@ -88,14 +88,14 @@ def test_ABookCore():
     assert user.loginStatus is True
     abook = src.ABookCore.ABookCore(cachePath, settings, user)
     courseList = abook.getCourseList()
-    assert len(courseList) == 3
+    assert len(courseList) == 9
 
     courseList = abook.getCourseList()
-    assert len(courseList) == 3
+    assert len(courseList) == 9
     abook.cache = {}
 
     courseList = abook.getCourseList()
-    assert len(courseList) == 3
+    assert len(courseList) == 9
 
     for course in courseList:
         courseId = course['courseInfoId']
