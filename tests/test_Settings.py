@@ -7,6 +7,7 @@ import src.Settings  # noqa: E402
 
 
 def test_Settings_1():
+    os.makedirs('tests', exist_ok=True)
     settingsPath = './tests/test_Settings_1.json'
     settings = src.Settings.Settings(settingsPath)
     with open(settingsPath, 'r', encoding='utf-8') as file:
@@ -19,6 +20,7 @@ def test_Settings_1():
 
 
 def test_Settings_2():
+    os.makedirs('tests', exist_ok=True)
     settingsPath = './tests/test_Settings_2.json'
     localSettings = {
         "debug": True,

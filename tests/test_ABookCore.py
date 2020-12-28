@@ -10,6 +10,7 @@ import src.Settings  # noqa: E402
 def test_ABookLogin_1():
 
     # Prepare local test_UserInfo.json file
+    os.makedirs('tests', exist_ok=True)
     userInfo = {
         "loginUser.loginName": "testName",
         "loginUser.loginPassword": "testPassword"
@@ -51,6 +52,7 @@ def test_ABookLogin_1():
 
 
 def test_ABookLogin_2():
+    os.makedirs('tests', exist_ok=True)
     userInfoPath = './tests/test_UserInfo.json'
     userInfo = 'qwq'
     with open(userInfoPath, 'w', encoding='utf-8') as file:
@@ -67,6 +69,7 @@ def test_ABookCore():
     cachePath = './tests/testCache'
     jsonPath = './tests/testCache/jsonCache'
     picPath = './tests/testCache/picCache'
+    os.makedirs('tests', exist_ok=True)
     os.makedirs(cachePath, exist_ok=True)
     os.makedirs(jsonPath, exist_ok=True)
     os.makedirs(picPath, exist_ok=True)

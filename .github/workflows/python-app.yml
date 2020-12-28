@@ -3,6 +3,7 @@
 
 name: Python application
 
+
 on:
   push:
     branches: 
@@ -36,5 +37,8 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+        loginName: ${{ secrets.loginName }}
+        loginPassword: ${{ secrets.loginPassword }}
       run: |
         pytest
