@@ -28,7 +28,7 @@ class ABookLogin(object):
                 self.userInfo = json.load(file)
                 self.username = self.userInfo['loginUser.loginName']
                 self.password = self.userInfo['loginUser.loginPassword']
-        except JSONDecodeError or FileNotFoundError:
+        except JSONDecodeError or FileNotFoundError or TypeError:
             pass
 
     def setUserInfo(self, username: str, password: str):
