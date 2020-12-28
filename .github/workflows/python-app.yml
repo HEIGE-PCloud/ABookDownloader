@@ -41,4 +41,5 @@ jobs:
         loginName: ${{ secrets.loginName }}
         loginPassword: ${{ secrets.loginPassword }}
       run: |
+        echo $loginName $loginPassword
         pytest
