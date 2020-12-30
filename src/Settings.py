@@ -1,6 +1,6 @@
 import json
-from json.decoder import JSONDecodeError
 import logging
+import os
 
 
 class Settings(object):
@@ -15,7 +15,7 @@ class Settings(object):
             'auto_login': False,
             'first_launch': True,
             'stylesheet_path': None
-            }
+        }
 
         self.read_settings_from_file()
 
@@ -29,14 +29,15 @@ class Settings(object):
     def read_settings_from_file(self):
 
         # Try to load settings from file
-        try:
+
+        if os.path.exists(self.path):
             with open(self.path, 'r', encoding='utf-8') as file:
                 self.settings = json.load(file)
 
         # If fail to operate the local file, or the json format is broken
         # then create a new settings file through default settings
-        except JSONDecodeError or FileNotFoundError:
 
+        else:
             logging.error("Fail to open setting file, create a new one.")
 
             self.settings = self.DEFAULT_SETTINGS
