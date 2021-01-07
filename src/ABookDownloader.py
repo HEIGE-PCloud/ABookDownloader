@@ -6,7 +6,6 @@ from PySide2.QtWidgets import QAction, QApplication, QGridLayout, QMainWindow, Q
 from CheckUpdateDialog import CheckUpdateDialog
 from CourseTreeWidget import CourseTreeWidget
 from DownloadDirTreeWidget import DownloadDirTreeWidget
-from ErrorMessageBox import ErrorMessageBox
 from ExceptionHook import UncaughtHook
 from FileDownloaderWidget import FileDownloaderWidget
 from FileListWidget import FileListWidget
@@ -48,7 +47,6 @@ class ABookDownloaderMainWindow(QMainWindow):
         self.init_menubar()
         self.setWindowTitle("ABookDownloader Dev")
         self.showMaximized()
-        sys.stderr = ErrorMessageBox()
 
     def init_menubar(self):
         exitAction = QAction('Exit', self)

@@ -27,7 +27,7 @@ class CourseTreeWidget(QWidget, ABookCore):
         self.treeWidget.itemChanged.connect(self.checkbox_toggled)
         self.treeWidget.clicked.connect(self.loadResourceList)
 
-        self.addDownloadTaskButton = QPushButton("Add selected items to the downloader")
+        self.addDownloadTaskButton = QPushButton("Add to Downloader")
         self.addDownloadTaskButton.clicked.connect(self.addDownloadTask)
 
         self.importCourseButton = QPushButton("Import Courses")
