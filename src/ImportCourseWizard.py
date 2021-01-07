@@ -22,7 +22,7 @@ class StartPage(QWizardPage):
     def __init__(self, parent=None):
         super(StartPage, self).__init__(parent)
         self.setTitle("Start")
-        label = QLabel("QAQ")
+        label = QLabel("Click next to continue")
         layout = QGridLayout()
         layout.addWidget(label)
         self.setLayout(layout)
@@ -32,7 +32,7 @@ class SelectCoursePage(QWizardPage):
 
     def __init__(self, parent=None):
         super(SelectCoursePage, self).__init__(parent)
-        self.setTitle("Course")
+        self.setTitle("Courses")
         self.courseList = parent.getCourseList()
         self.courseListWidget = QListWidget()
         # self.courseListWidget.setDisabled(True)
@@ -55,21 +55,32 @@ class ImportPage(QWizardPage):
     def __init__(self, parent=None):
         super(ImportPage, self).__init__(parent)
         self.setTitle("Importing")
+        self.courseProgressLabel = QLabel("Pending")
+        self.chapterProgressLabel = QLabel("Pending")
         self.courseProgressBar = QProgressBar()
         self.chapterProgressBar = QProgressBar()
         self.worker = RefreshCourseListWorker(parent)
+        self.worker.signals.updateCourseLabel.connect(self.updateCourseLabel)
+        self.worker.signals.updateChapterLabel.connect(self.updateChapterLabel)
         self.worker.signals.updateCourse.connect(self.updateCourseProgressBar)
         self.worker.signals.updateChapter.connect(self.updateChapterProgressBar)
         self.worker.signals.isComplete.connect(self.updateStatus)
         self.completeStatus = False
-        # self.isComplete()
         layout = QGridLayout()
+        layout.addWidget(self.courseProgressLabel)
         layout.addWidget(self.courseProgressBar)
+        layout.addWidget(self.chapterProgressLabel)
         layout.addWidget(self.chapterProgressBar)
         self.setLayout(layout)
 
     def initializePage(self) -> None:
         self.worker.start()
+
+    def updateCourseLabel(self, value: str):
+        self.courseProgressLabel.setText(value)
+
+    def updateChapterLabel(self, value: str):
+        self.chapterProgressLabel.setText(value)
 
     def updateCourseProgressBar(self, value: int, total: int):
         self.courseProgressBar.setMaximum(total)
@@ -94,7 +105,7 @@ class EndPage(QWizardPage):
     def __init__(self, parent=None):
         super(EndPage, self).__init__(parent)
         self.setTitle("End")
-        label = QLabel("QWQ")
+        label = QLabel("All courses are successfully imported. Click Finish to continue.")
         layout = QGridLayout()
         layout.addWidget(label)
         self.setLayout(layout)
@@ -108,6 +119,8 @@ class EndPage(QWizardPage):
 class RefreshCourseListSignals(QObject):
     updateCourse = Signal(int, int)
     updateChapter = Signal(int, int)
+    updateCourseLabel = Signal(str)
+    updateChapterLabel = Signal(str)
     isComplete = Signal()
 
 
@@ -121,14 +134,16 @@ class RefreshCourseListWorker(QThread):
     def run(self):
         courseList = self.parent.getCourseList()
         for i in range(len(courseList)):
-            print("Updating #{} course with total {}".format(i + 1, len(courseList)))
             courseId = courseList[i]['courseInfoId']
             chapterList = self.parent.getChapterList(courseId)
             for j in range(len(chapterList)):
-                print("Update #{} chapter with total {}".format(j + 1, len(chapterList)))
+                print("Updated chapter {}/{}".format(j + 1, len(chapterList)))
+                self.signals.updateChapterLabel.emit("Updated chapter {}/{}".format(j + 1, len(chapterList)))
                 self.signals.updateChapter.emit(j + 1, len(chapterList))
                 chapterId = chapterList[j]['id']
                 self.parent.getResourceList(courseId, chapterId)
+            print("Updated course {}/{}".format(i + 1, len(courseList)))
+            self.signals.updateCourseLabel.emit("Updated course {}/{}".format(i + 1, len(courseList)))
             self.signals.updateCourse.emit(i + 1, len(courseList))
         self.signals.isComplete.emit()
 
