@@ -2,49 +2,36 @@ import sys
 import traceback
 from PySide2.QtCore import QObject, Signal
 from PySide2.QtWidgets import QApplication, QMessageBox
-
-# basic logger functionality
-# log = logging.getLogger(__name__)
-# handler = logging.StreamHandler(stream=sys.stdout)
-# log.addHandler(handler)
+import pyperclip
 
 
-def show_exception_box(log_msg):
-    """Checks if a QApplication instance is available and shows a messagebox with the exception message.
-    If unavailable (non-console application), log an additional notice.
-    """
+def showExceptionBox(logMessage):
     if QApplication.instance() is not None:
-        errorbox = QMessageBox()
-        errorbox.setText("Oops. An unexpected error occurred:\n{0}".format(log_msg))
-        errorbox.exec_()
-    # else:
-    #     log.debug("No QApplication instance available.")
+        errorBox = QMessageBox()
+        errorBox.setWindowTitle('Error')
+        errorBox.setText("Oops. An unexpected error occurred:\n{0}".format(logMessage))
+        errorBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Close)
+        buttonCopy = errorBox.button(QMessageBox.Ok)
+        buttonCopy.setText('Copy exception log...')
+        buttonCopy.clicked.connect(lambda: pyperclip.copy(logMessage))
+        errorBox.exec_()
 
 
 class UncaughtHook(QObject):
-    _exception_caught = Signal(object)
+    ExceptionCaught = Signal(object)
 
     def __init__(self, *args, **kwargs):
         super(UncaughtHook, self).__init__(*args, **kwargs)
 
-        # this registers the exception_hook() function as hook with the Python interpreter
-        sys.excepthook = self.exception_hook
+        sys.excepthook = self.exceptionhook
+        self.ExceptionCaught.connect(showExceptionBox)
 
-        # connect signal to execute the message box function always on main thread
-        self._exception_caught.connect(show_exception_box)
-
-    def exception_hook(self, exc_type, exc_value, exc_traceback):
-        """Function handling uncaught exceptions.
-        It is triggered each time an uncaught exception occurs.
-        """
-        if issubclass(exc_type, KeyboardInterrupt):
-            # ignore keyboard interrupt to support console applications
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+    def exceptionhook(self, excType, excValue, excTraceback):
+        if issubclass(excType, KeyboardInterrupt):
+            sys.__excepthook__(excType, excValue, excTraceback)
         else:
             # exc_info = (exc_type, exc_value, exc_traceback)
-            log_msg = '\n'.join([''.join(traceback.format_tb(exc_traceback)),
-                                 '{0}: {1}'.format(exc_type.__name__, exc_value)])
+            logMessage = '\n'.join([''.join(traceback.format_tb(excTraceback)),
+                                   '{}: {}'.format(excType.__name__, excValue)])
             # log.critical("Uncaught exception:\n {0}".format(log_msg), exc_info=exc_info)
-
-            # trigger message box show
-            self._exception_caught.emit(log_msg)
+            self.ExceptionCaught.emit(logMessage)
