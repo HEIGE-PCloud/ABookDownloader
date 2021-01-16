@@ -26,37 +26,37 @@ jobs:
       with:
         path: src
 
-    - name: Create a Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
-        tag_name: ${{ github.ref }}
-        # The name of the release. For example, `Release v1.0.1`
-        release_name: Release ${{ github.ref }}
-        # Text describing the contents of the tag.
-        # body: # optional
-        # Path to file with information about the tag.
-        # body_path: # optional
-        # `true` to create a draft (unpublished) release, `false` to create a published one. Default: `false`
-        draft: true # optional
-        # `true` to identify the release as a prerelease. `false` to identify the release as a full release. Default: `false`
-        prerelease: false # optional
-        # Any branch or commit SHA the Git tag is created from, unused if the Git tag already exists. Default: SHA of current commit
-        # commitish: # optional
+#     - name: Create a Release
+#       id: create_release
+#       uses: actions/create-release@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
+#         tag_name: ${{ github.ref }}
+#         # The name of the release. For example, `Release v1.0.1`
+#         release_name: Release ${{ github.ref }}
+#         # Text describing the contents of the tag.
+#         # body: # optional
+#         # Path to file with information about the tag.
+#         # body_path: # optional
+#         # `true` to create a draft (unpublished) release, `false` to create a published one. Default: `false`
+#         draft: true # optional
+#         # `true` to identify the release as a prerelease. `false` to identify the release as a full release. Default: `false`
+#         prerelease: false # optional
+#         # Any branch or commit SHA the Git tag is created from, unused if the Git tag already exists. Default: SHA of current commit
+#         # commitish: # optional
     
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: src/dist/windows/ABookDownloader.exe
-        asset_name: ABookdownloader.exe
-        asset_content_type: application/exe
+#     - name: Upload Release Asset
+#       id: upload-release-asset 
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+#         asset_path: src/dist/windows/ABookDownloader.exe
+#         asset_name: ABookdownloader.exe
+#         asset_content_type: application/exe
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
