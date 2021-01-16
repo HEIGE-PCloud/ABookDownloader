@@ -1,6 +1,6 @@
 ﻿altgraph==0.17
 autopep8==1.5.4
-certifi==2020.11.8
+certifi==2020.12.5
 chardet==3.0.4
 flake8==3.8.4
 future==0.18.2
