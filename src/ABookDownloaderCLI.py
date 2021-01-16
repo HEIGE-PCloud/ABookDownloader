@@ -16,6 +16,7 @@ ROOT = 0
 courses_list = []
 chapter_list = []
 settings = []
+current_user = ["", ""]
 
 
 def safe_mkdir(dir_name):
@@ -129,6 +130,8 @@ def Abook_login(login_name, login_password):
     session.post(url=login_url, data=login_data, headers=headers)
     if session.post(login_status_url).json()["message"] == "已登录":
         logging.info("Successfully login in!")
+        current_user[0] = login_name
+        current_user[1] = login_password
         return True
     else:
         logging.error("Login failed, please try again.")
@@ -234,10 +237,11 @@ def download_course_from_root(root_chapter, course_id, path):
                 except requests.ConnectionError or JSONDecodeError:
                     logging.error(
                         "Info fetched failed, will restart in 5 seconds.")
+                    Abook_login(current_user[0], current_user[1])
                     time.sleep(5)
             page = info['page']
             page_count = page["pageCount"]
-            if page_count == cur:
+            if page_count <= cur:
                 all_page_downloaded = True
             cur += 1
             if 'myMobileResourceList' in info:
