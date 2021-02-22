@@ -11,7 +11,7 @@ pycodestyle==2.6.0
 pyflakes==2.2.0
 pyinstaller==4.2
 pyinstaller-hooks-contrib==2020.11
-pyperclip==1.8.1
+pyperclip==1.8.2
 PySide2==5.15.2
 pywin32-ctypes==0.2.0
 requests==2.25.1
